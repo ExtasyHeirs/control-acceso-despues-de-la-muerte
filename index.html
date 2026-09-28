@@ -23,7 +23,6 @@
     body {
       margin: 0;
       padding: 20px;
-      min-height: 100vh;
       background: #111;
       color: #fff;
       font-family: Arial, sans-serif;
@@ -32,7 +31,7 @@
     .contenedor {
       width: 100%;
       max-width: 420px;
-      margin: 60px auto;
+      margin: 40px auto;
     }
 
     .titulo {
@@ -43,7 +42,7 @@
 
     .subtitulo {
       color: #aaa;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
 
     .card {
@@ -52,21 +51,33 @@
       padding: 22px;
     }
 
-    .estado {
+    button {
+      width: 100%;
+      padding: 15px;
+      border: 0;
+      border-radius: 10px;
+      background: #fff;
+      color: #111;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #lectorQR {
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    #resultado {
+      margin-top: 16px;
       text-align: center;
       color: #aaa;
       line-height: 1.5;
     }
 
-    .icono {
-      font-size: 48px;
-      margin-bottom: 12px;
-    }
-
   </style>
 
 </head>
-
 
 <body>
 
@@ -82,26 +93,166 @@
 
     <div class="card">
 
-      <div class="estado">
+      <button
+        id="botonCamara"
+        type="button"
+      >
+        📷 Abrir cámara
+      </button>
 
-        <div class="icono">
-          📷
-        </div>
+      <div id="lectorQR"></div>
 
-        <strong>
-          Escáner de boletos
-        </strong>
-
-        <br><br>
-
-        Estamos preparando el control
-        de acceso.
-
+      <div id="resultado">
+        Pulsa el botón para iniciar el escáner.
       </div>
 
     </div>
 
   </div>
+
+
+  <script>
+
+    const boton =
+      document.getElementById("botonCamara");
+
+    const lectorQR =
+      document.getElementById("lectorQR");
+
+    const resultado =
+      document.getElementById("resultado");
+
+
+    boton.addEventListener(
+      "click",
+      iniciarCamara
+    );
+
+
+    function cargarLectorQR() {
+
+      return new Promise(function(resolve, reject) {
+
+        if (
+          typeof Html5Qrcode !==
+          "undefined"
+        ) {
+
+          resolve();
+
+          return;
+
+        }
+
+        const script =
+          document.createElement("script");
+
+        script.src =
+          "https://unpkg.com/html5-qrcode";
+
+        script.onload =
+          resolve;
+
+        script.onerror =
+          reject;
+
+        document.head.appendChild(
+          script
+        );
+
+      });
+
+    }
+
+
+    async function iniciarCamara() {
+
+      boton.disabled = true;
+
+      boton.textContent =
+        "⏳ Preparando cámara...";
+
+      resultado.textContent =
+        "";
+
+
+      try {
+
+        await cargarLectorQR();
+
+
+        const lector =
+          new Html5Qrcode(
+            "lectorQR"
+          );
+
+
+        await lector.start(
+
+          {
+            facingMode:
+              "environment"
+          },
+
+          {
+            fps: 10,
+
+            qrbox: {
+              width: 250,
+              height: 250
+            }
+
+          },
+
+          function(textoQR) {
+
+            lector.stop();
+
+            resultado.innerHTML =
+              "✅ QR detectado<br><br>" +
+              "<small>" +
+              textoQR +
+              "</small>";
+
+          },
+
+          function() {
+
+            // Ignoramos errores
+            // normales del escaneo.
+
+          }
+
+        );
+
+
+        boton.textContent =
+          "📷 Cámara activa";
+
+      }
+
+      catch(error) {
+
+        resultado.innerHTML =
+          "❌ No se pudo abrir la cámara.<br><br>" +
+          "<small>" +
+          (
+            error.message ||
+            error
+          ) +
+          "</small>";
+
+        boton.disabled =
+          false;
+
+        boton.textContent =
+          "📷 Intentar de nuevo";
+
+      }
+
+    }
+
+  </script>
 
 </body>
 
