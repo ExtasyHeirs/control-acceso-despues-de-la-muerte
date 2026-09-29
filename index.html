@@ -11,7 +11,7 @@
   >
 
   <title>
-    Prueba QR | Después de la muerte
+    Control de acceso | Después de la muerte
   </title>
 
 
@@ -45,6 +45,52 @@
     }
 
 
+    .tarjeta {
+
+      background: #1c1c1c;
+
+      border-radius: 18px;
+
+      padding: 25px;
+
+    }
+
+
+    h1 {
+
+      margin-top: 0;
+
+    }
+
+
+    p {
+
+      color: #aaa;
+
+      line-height: 1.5;
+
+    }
+
+
+    input {
+
+      width: 100%;
+
+      padding: 15px;
+
+      margin-top: 15px;
+
+      border: 0;
+
+      border-radius: 10px;
+
+      font-size: 17px;
+
+      box-sizing: border-box;
+
+    }
+
+
     button {
 
       width: 100%;
@@ -64,6 +110,20 @@
       background: #fff;
 
       color: #111;
+
+    }
+
+
+    button:disabled {
+
+      opacity: 0.6;
+
+    }
+
+
+    .oculto {
+
+      display: none;
 
     }
 
@@ -88,7 +148,9 @@
     }
 
 
-    #mensaje {
+    #mensajeLogin,
+
+    #mensajeScanner {
 
       margin-top: 20px;
 
@@ -107,71 +169,126 @@
   <div class="contenedor">
 
 
-    <h1>
-      📷 Escáner QR
-    </h1>
-
-
-    <p>
-      Prueba de cámara y lectura QR.
-    </p>
-
-
-    <button
-      id="boton"
-    >
-      📷 Abrir cámara
-    </button>
-
-
-    <video
-      id="video"
-      autoplay
-      playsinline
-      muted
-    ></video>
-
-
-    <canvas
-      id="canvas"
-    ></canvas>
+    <!-- ========================= -->
+    <!-- LOGIN -->
+    <!-- ========================= -->
 
 
     <div
-      id="mensaje"
+      id="login"
+      class="tarjeta"
     >
-      Cámara todavía no iniciada.
+
+      <h1>
+        🔐 Control de acceso
+      </h1>
+
+
+      <p>
+        Ingresa el código de acceso
+        proporcionado por la organización.
+      </p>
+
+
+      <form
+        id="formularioLogin"
+        method="POST"
+        action="https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec"
+      >
+
+        <input
+          type="password"
+          name="codigo"
+          id="codigoAcceso"
+          placeholder="Código de acceso"
+          autocomplete="off"
+          required
+        >
+
+
+        <button
+          type="submit"
+        >
+          🔓 Entrar
+        </button>
+
+      </form>
+
+
+      <div
+        id="mensajeLogin"
+      ></div>
+
+    </div>
+
+
+
+    <!-- ========================= -->
+    <!-- ESCÁNER -->
+    <!-- ========================= -->
+
+
+    <div
+      id="scanner"
+      class="tarjeta oculto"
+    >
+
+      <h1>
+        📷 Escáner QR
+      </h1>
+
+
+      <p>
+        Apunta la cámara al código QR del boleto.
+      </p>
+
+
+      <button
+        id="botonCamara"
+        type="button"
+      >
+        📷 Abrir cámara
+      </button>
+
+
+      <video
+        id="video"
+        autoplay
+        playsinline
+        muted
+      ></video>
+
+
+      <canvas
+        id="canvas"
+      ></canvas>
+
+
+      <div
+        id="mensajeScanner"
+      >
+        Cámara todavía no iniciada.
+      </div>
+
     </div>
 
 
   </div>
 
 
+
   <script>
 
 
-    const boton =
-      document.getElementById(
-        "boton"
-      );
+    /*
+     * ==================================
+     * CONFIGURACIÓN
+     * ==================================
+     */
 
 
-    const video =
-      document.getElementById(
-        "video"
-      );
-
-
-    const canvas =
-      document.getElementById(
-        "canvas"
-      );
-
-
-    const mensaje =
-      document.getElementById(
-        "mensaje"
-      );
+    let tokenAcceso =
+      "";
 
 
     let intervalo =
@@ -184,9 +301,74 @@
 
 
     /*
-     * =================================
+     * ==================================
+     * OBTENER TOKEN
+     * ==================================
+     */
+
+
+    function obtenerToken() {
+
+      const hash =
+        window.location.hash;
+
+
+      if (!hash) {
+
+        return "";
+
+      }
+
+
+      const parametros =
+        new URLSearchParams(
+          hash.substring(1)
+        );
+
+
+      return (
+        parametros.get("token") ||
+        ""
+      );
+
+    }
+
+
+
+    /*
+     * ==================================
+     * MOSTRAR ESCÁNER
+     * ==================================
+     */
+
+
+    function mostrarEscaner(
+      token
+    ) {
+
+      tokenAcceso =
+        token;
+
+
+      document
+        .getElementById("login")
+        .classList
+        .add("oculto");
+
+
+      document
+        .getElementById("scanner")
+        .classList
+        .remove("oculto");
+
+    }
+
+
+
+    /*
+     * ==================================
      * CARGAR jsQR
-     * =================================
+     * ==================================
      */
 
 
@@ -251,127 +433,152 @@
 
 
     /*
-     * =================================
+     * ==================================
      * ABRIR CÁMARA
-     * =================================
+     * ==================================
      */
 
 
-    boton.addEventListener(
-      "click",
-      async function() {
+    async function iniciarCamara() {
 
 
-        boton.disabled =
-          true;
+      const boton =
+        document.getElementById(
+          "botonCamara"
+        );
+
+
+      const video =
+        document.getElementById(
+          "video"
+        );
+
+
+      const mensaje =
+        document.getElementById(
+          "mensajeScanner"
+        );
+
+
+      boton.disabled =
+        true;
+
+
+      boton.textContent =
+        "⏳ Abriendo cámara...";
+
+
+      mensaje.textContent =
+        "";
+
+
+      try {
+
+
+        /*
+         * EXACTAMENTE LA PARTE
+         * QUE YA COMPROBAMOS
+         * QUE FUNCIONA.
+         */
+
+
+        const stream =
+          await navigator.mediaDevices
+            .getUserMedia({
+
+              video: {
+                facingMode: "environment"
+              },
+
+              audio: false
+
+            });
+
+
+        video.srcObject =
+          stream;
+
+
+        await video.play();
 
 
         boton.textContent =
-          "⏳ Abriendo cámara...";
+          "✅ Cámara funcionando";
 
 
         mensaje.textContent =
-          "";
+          "Cámara activa. Cargando lector QR...";
 
 
-        try {
+        await cargarJsQR();
 
 
-          /*
-           * Primero cámara.
-           */
+        mensaje.textContent =
+          "📷 Apunta al código QR.";
 
 
-          const stream =
-            await navigator.mediaDevices
-              .getUserMedia({
+        iniciarEscaneo();
 
-                video: {
-                  facingMode: "environment"
-                },
-
-                audio: false
-
-              });
-
-
-          video.srcObject =
-            stream;
-
-
-          await video.play();
-
-
-          boton.textContent =
-            "✅ Cámara funcionando";
-
-
-          mensaje.textContent =
-            "Cámara activa. Cargando lector QR...";
-
-
-          /*
-           * Después jsQR.
-           */
-
-
-          await cargarJsQR();
-
-
-          mensaje.textContent =
-            "📷 Apunta la cámara a un código QR.";
-
-
-          iniciarEscaneo();
-
-
-        }
-
-
-        catch(error) {
-
-
-          boton.disabled =
-            false;
-
-
-          boton.textContent =
-            "📷 Intentar de nuevo";
-
-
-          mensaje.innerHTML =
-            "❌ Error.<br><br>" +
-
-            "<small>" +
-
-            error.name +
-
-            "<br>" +
-
-            error.message +
-
-            "</small>";
-
-
-          console.error(
-            error
-          );
-
-        }
 
       }
-    );
+
+
+      catch(error) {
+
+
+        boton.disabled =
+          false;
+
+
+        boton.textContent =
+          "📷 Intentar de nuevo";
+
+
+        mensaje.innerHTML =
+          "❌ No se pudo abrir la cámara.<br><br>" +
+
+          "<small>" +
+
+          error.name +
+
+          "<br>" +
+
+          error.message +
+
+          "</small>";
+
+
+        console.error(
+          "CAMARA:",
+          error
+        );
+
+      }
+
+    }
 
 
 
     /*
-     * =================================
-     * ESCANEAR
-     * =================================
+     * ==================================
+     * ESCANEO QR
+     * ==================================
      */
 
 
     function iniciarEscaneo() {
+
+
+      const video =
+        document.getElementById(
+          "video"
+        );
+
+
+      const canvas =
+        document.getElementById(
+          "canvas"
+        );
 
 
       const contexto =
@@ -381,6 +588,17 @@
             willReadFrequently: true
           }
         );
+
+
+      if (
+        intervalo
+      ) {
+
+        clearInterval(
+          intervalo
+        );
+
+      }
 
 
       intervalo =
@@ -455,20 +673,18 @@
                 true;
 
 
-              mensaje.innerHTML =
-                "✅ QR detectado.<br><br>" +
-
-                "<small>" +
-
-                codigo.data +
-
-                "</small>";
-
-
               clearInterval(
                 intervalo
               );
 
+
+              intervalo =
+                null;
+
+
+              mensajeQRDetectado(
+                codigo.data
+              );
 
             }
 
@@ -476,6 +692,112 @@
           },
           150
         );
+
+    }
+
+
+
+    /*
+     * ==================================
+     * QR DETECTADO
+     * ==================================
+     */
+
+
+    function mensajeQRDetectado(
+      datos
+    ) {
+
+
+      const mensaje =
+        document.getElementById(
+          "mensajeScanner"
+        );
+
+
+      mensaje.innerHTML =
+        "✅ QR detectado.<br><br>" +
+
+        "<small>" +
+
+        datos +
+
+        "</small>";
+
+
+    }
+
+
+
+    /*
+     * ==================================
+     * LOGIN
+     * ==================================
+     */
+
+
+    document
+      .getElementById(
+        "formularioLogin"
+      )
+      .addEventListener(
+        "submit",
+        function() {
+
+
+          document
+            .getElementById(
+              "mensajeLogin"
+            )
+            .textContent =
+              "⏳ Verificando acceso...";
+
+
+        }
+      );
+
+
+
+    /*
+     * ==================================
+     * BOTÓN CÁMARA
+     * ==================================
+     */
+
+
+    document
+      .getElementById(
+        "botonCamara"
+      )
+      .addEventListener(
+        "click",
+        function() {
+
+          iniciarCamara();
+
+        }
+      );
+
+
+
+    /*
+     * ==================================
+     * ARRANQUE
+     * ==================================
+     */
+
+
+    tokenAcceso =
+      obtenerToken();
+
+
+    if (
+      tokenAcceso
+    ) {
+
+      mostrarEscaner(
+        tokenAcceso
+      );
 
     }
 
