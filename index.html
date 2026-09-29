@@ -40,8 +40,7 @@
       width: 100%;
       max-width: 430px;
 
-      margin:
-        40px auto;
+      margin: 40px auto;
 
     }
 
@@ -137,12 +136,6 @@
 
     }
 
-    .botonCamara {
-
-      margin-top: 20px;
-
-    }
-
     .mensaje {
 
       margin-top: 18px;
@@ -228,29 +221,9 @@
 
     }
 
-    .resultado {
-
-      margin-top: 20px;
-
-      padding: 18px;
-
-      border-radius: 12px;
-
-      background: #252525;
-
-      line-height: 1.6;
-
-    }
-
     .error {
 
       color: #ff7777;
-
-    }
-
-    .correcto {
-
-      color: #7cff9b;
 
     }
 
@@ -260,21 +233,6 @@
 
 
 <body>
-  <div id="diagnosticoCamara" style="
-  position:fixed;
-  top:10px;
-  left:10px;
-  right:10px;
-  z-index:9999;
-  background:#222;
-  color:#fff;
-  padding:12px;
-  border-radius:8px;
-  font-family:Arial,sans-serif;
-  font-size:14px;
-">
-  Diagnóstico: página cargada
-</div>
 
   <div class="contenedor">
 
@@ -350,11 +308,9 @@
         <button
           type="button"
           id="botonCamara"
-          class="botonCamara"
         >
           📷 Abrir cámara
         </button>
-
 
         <div
           id="estadoScanner"
@@ -362,7 +318,6 @@
         >
           Cámara apagada.
         </div>
-
 
         <div
           id="videoContenedor"
@@ -382,22 +337,14 @@
 
         </div>
 
-
         <canvas
           id="canvas"
           class="oculto"
         ></canvas>
 
-
         <div
           id="mensajeScanner"
           class="mensaje"
-        ></div>
-
-
-        <div
-          id="resultadoScanner"
-          class="resultado oculto"
         ></div>
 
       </div>
@@ -421,8 +368,6 @@
 
     let procesandoQR = false;
 
-    let jsQRCargado = false;
-
 
     /*
      * =====================================================
@@ -430,20 +375,16 @@
      * =====================================================
      */
 
-
     document
       .getElementById("formularioLogin")
       .addEventListener(
         "submit",
         function() {
 
-          const mensaje =
-            document.getElementById(
-              "mensajeLogin"
-            );
-
-          mensaje.textContent =
-            "⏳ Verificando acceso...";
+          document
+            .getElementById("mensajeLogin")
+            .textContent =
+              "⏳ Verificando acceso...";
 
         }
       );
@@ -451,10 +392,9 @@
 
     /*
      * =====================================================
-     * OBTENER TOKEN DE LA URL
+     * TOKEN
      * =====================================================
      */
-
 
     function obtenerToken() {
 
@@ -484,7 +424,6 @@
      * =====================================================
      */
 
-
     function mostrarEscaner() {
 
       tokenAcceso =
@@ -495,11 +434,13 @@
 
         document
           .getElementById("login")
-          .classList.remove("oculto");
+          .classList
+          .remove("oculto");
 
         document
           .getElementById("scanner")
-          .classList.add("oculto");
+          .classList
+          .add("oculto");
 
         return;
 
@@ -508,93 +449,13 @@
 
       document
         .getElementById("login")
-        .classList.add("oculto");
+        .classList
+        .add("oculto");
 
       document
         .getElementById("scanner")
-        .classList.remove("oculto");
-
-    }
-
-
-    /*
-     * =====================================================
-     * CARGAR jsQR
-     * =====================================================
-     */
-
-
-    function cargarJsQR() {
-
-      return new Promise(
-        function(resolve, reject) {
-
-          if (
-            jsQRCargado &&
-            typeof jsQR === "function"
-          ) {
-
-            resolve();
-
-            return;
-
-          }
-
-
-          const script =
-            document.createElement(
-              "script"
-            );
-
-
-          script.src =
-            "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
-
-
-          script.onload =
-            function() {
-
-              if (
-                typeof jsQR === "function"
-              ) {
-
-                jsQRCargado = true;
-
-                resolve();
-
-              } else {
-
-                reject(
-                  new Error(
-                    "jsQR no pudo cargarse."
-                  )
-                );
-
-              }
-
-            };
-
-
-          script.onerror =
-            function() {
-
-              reject(
-                new Error(
-                  "No se pudo cargar el lector QR."
-                )
-              );
-
-            };
-
-
-          document
-            .head
-            .appendChild(
-              script
-            );
-
-        }
-      );
+        .classList
+        .remove("oculto");
 
     }
 
@@ -603,8 +464,16 @@
      * =====================================================
      * ABRIR CÁMARA
      * =====================================================
+     *
+     * IMPORTANTE:
+     *
+     * Primero solicitamos la cámara con
+     * video:true, igual que en la página
+     * de prueba que sí funcionó.
+     *
+     * NO cargamos jsQR antes.
+     *
      */
-
 
     document
       .getElementById("botonCamara")
@@ -671,21 +540,19 @@
 
 
       /*
-       * PRIMERO abrimos la cámara.
-       * No cargamos jsQR antes.
+       * ===================================================
+       * PRIMERA PRUEBA REAL DE CÁMARA
+       * ===================================================
        */
 
       try {
 
         streamCamara =
-          await navigator.mediaDevices
+          await navigator
+            .mediaDevices
             .getUserMedia({
 
-              video: {
-                facingMode: {
-                  ideal: "environment"
-                }
-              },
+              video: true,
 
               audio: false
 
@@ -710,6 +577,8 @@
 
           "<small>" +
 
+          "Error: " +
+
           error.name +
 
           "<br>" +
@@ -720,14 +589,20 @@
 
           "</span>";
 
+        console.error(
+          "getUserMedia:",
+          error
+        );
+
         return;
 
       }
 
 
       /*
-       * Si llegamos aquí,
-       * la cámara SÍ abrió.
+       * ===================================================
+       * SI LLEGAMOS AQUÍ, LA CÁMARA ABRIÓ
+       * ===================================================
        */
 
       video.srcObject =
@@ -744,10 +619,10 @@
 
 
       estado.textContent =
-        "📷 Cámara funcionando. Apunta al QR.";
+        "📷 Cámara funcionando.";
 
       mensaje.textContent =
-        "Buscando código QR...";
+        "Preparando lector QR...";
 
 
       try {
@@ -765,7 +640,9 @@
 
 
       /*
-       * AHORA cargamos jsQR.
+       * ===================================================
+       * CARGAR jsQR DESPUÉS DE ABRIR CÁMARA
+       * ===================================================
        */
 
       try {
@@ -779,7 +656,9 @@
 
         mensaje.innerHTML =
           "<span class='error'>" +
+
           error.message +
+
           "</span>";
 
         return;
@@ -787,11 +666,92 @@
       }
 
 
-      /*
-       * Comenzar lectura.
-       */
+      estado.textContent =
+        "📷 Cámara funcionando. Apunta al QR.";
+
+      mensaje.textContent =
+        "Buscando código QR...";
+
 
       iniciarEscaneoQR();
+
+    }
+
+
+    /*
+     * =====================================================
+     * CARGAR jsQR
+     * =====================================================
+     */
+
+    function cargarJsQR() {
+
+      return new Promise(
+        function(resolve, reject) {
+
+          if (
+            typeof jsQR === "function"
+          ) {
+
+            resolve();
+
+            return;
+
+          }
+
+
+          const script =
+            document.createElement(
+              "script"
+            );
+
+
+          script.src =
+            "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+
+
+          script.onload =
+            function() {
+
+              if (
+                typeof jsQR === "function"
+              ) {
+
+                resolve();
+
+              } else {
+
+                reject(
+                  new Error(
+                    "jsQR no pudo cargarse."
+                  )
+                );
+
+              }
+
+            };
+
+
+          script.onerror =
+            function() {
+
+              reject(
+                new Error(
+                  "No se pudo cargar el lector QR."
+                )
+              );
+
+            };
+
+
+          document
+            .head
+            .appendChild(
+              script
+            );
+
+        }
+      );
 
     }
 
@@ -801,7 +761,6 @@
      * ESCANEAR QR
      * =====================================================
      */
-
 
     function iniciarEscaneoQR() {
 
@@ -813,11 +772,6 @@
       const canvas =
         document.getElementById(
           "canvas"
-        );
-
-      const mensaje =
-        document.getElementById(
-          "mensajeScanner"
         );
 
 
@@ -842,8 +796,7 @@
 
 
             if (
-              video.readyState <
-              2
+              video.readyState < 2
             ) {
               return;
             }
@@ -934,7 +887,6 @@
      * =====================================================
      */
 
-
     function procesarQR(
       contenido
     ) {
@@ -980,10 +932,6 @@
 
       try {
 
-        /*
-         * Nuestro QR contiene una URL.
-         */
-
         const url =
           new URL(
             contenido
@@ -1001,11 +949,6 @@
 
       } catch(error) {
 
-        /*
-         * Por si el QR contiene
-         * directamente el código.
-         */
-
         codigo =
           String(
             contenido
@@ -1018,7 +961,9 @@
 
         mensaje.innerHTML =
           "<span class='error'>" +
+
           "❌ El QR no contiene un código válido." +
+
           "</span>";
 
         procesandoQR =
@@ -1032,7 +977,6 @@
 
 
       const urlResultado =
-
         URL_APPS_SCRIPT +
 
         "?modo=resultadoEscaneo" +
@@ -1048,11 +992,6 @@
         );
 
 
-      /*
-       * Apps Script hará la validación
-       * y mostrará el resultado.
-       */
-
       window.location.href =
         urlResultado;
 
@@ -1061,10 +1000,9 @@
 
     /*
      * =====================================================
-     * LIMPIAR CÁMARA
+     * DETENER CÁMARA
      * =====================================================
      */
-
 
     function detenerCamara() {
 
@@ -1110,14 +1048,8 @@
      * =====================================================
      */
 
-
     mostrarEscaner();
 
-
-    /*
-     * Si la página cambia o se abandona,
-     * apagamos la cámara.
-     */
 
     window.addEventListener(
       "pagehide",
