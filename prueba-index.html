@@ -1,1 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>Prueba de cámara</title>
+
+  <style>
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .contenedor {
+      max-width: 500px;
+      margin: 40px auto;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 20px;
+      border: 0;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: bold;
+      background: #fff;
+      color: #111;
+    }
+
+    video {
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 15px;
+      background: #000;
+    }
+
+    #mensaje {
+      margin-top: 20px;
+      line-height: 1.5;
+      color: #ccc;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="contenedor">
+
+    <h1>📷 Prueba de cámara</h1>
+
+    <p>
+      Esta página solamente comprueba si GitHub Pages
+      puede abrir la cámara.
+    </p>
+
+    <button id="boton">
+      📷 Abrir cámara
+    </button>
+
+    <video
+      id="video"
+      autoplay
+      playsinline
+      muted
+    ></video>
+
+    <div id="mensaje"></div>
+
+  </div>
+
+  <script>
+
+    const boton =
+      document.getElementById(
+        "boton"
+      );
+
+    const video =
+      document.getElementById(
+        "video"
+      );
+
+    const mensaje =
+      document.getElementById(
+        "mensaje"
+      );
+
+
+    boton.addEventListener(
+      "click",
+      async function() {
+
+        boton.disabled =
+          true;
+
+        boton.textContent =
+          "⏳ Abriendo cámara...";
+
+        mensaje.textContent =
+          "";
+
+
+        try {
+
+          const stream =
+            await navigator.mediaDevices
+              .getUserMedia({
+
+                video: {
+                  facingMode: "environment"
+                },
+
+                audio: false
+
+              });
+
+
+          video.srcObject =
+            stream;
+
+
+          boton.textContent =
+            "✅ Cámara funcionando";
+
+          mensaje.textContent =
+            "GitHub Pages puede acceder a la cámara en este dispositivo.";
+
+        }
+
+        catch(error) {
+
+          boton.disabled =
+            false;
+
+          boton.textContent =
+            "📷 Intentar de nuevo";
+
+          mensaje.innerHTML =
+            "❌ No se pudo abrir la cámara.<br><br>" +
+            "<small>" +
+            error.name +
+            "<br>" +
+            error.message +
+            "</small>";
+
+        }
+
+      }
+    );
+
+  </script>
+
+</body>
+
+</html>
 
