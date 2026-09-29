@@ -172,7 +172,11 @@
 
       height: auto;
 
+      min-height: 260px;
+
       background: #000;
+
+      object-fit: cover;
 
     }
 
@@ -319,23 +323,25 @@
           Cámara apagada.
         </div>
 
- <video
-  id="video"
-  autoplay
-  playsinline
-  muted
-  style="
-    display:block;
-    width:100%;
-    min-height:260px;
-    background:#000;
-    object-fit:cover;
-  "
-></video>
 
-<div
-  class="marcoQR"
-></div>
+        <div
+          id="videoContenedor"
+          class="videoContenedor"
+        >
+
+          <video
+            id="video"
+            autoplay
+            playsinline
+            muted
+          ></video>
+
+          <div
+            class="marcoQR"
+          ></div>
+
+        </div>
+
 
         <canvas
           id="canvas"
@@ -402,7 +408,9 @@
         window.location.hash;
 
       if (!hash) {
+
         return "";
+
       }
 
       const parametros =
@@ -462,17 +470,8 @@
 
     /*
      * =====================================================
-     * ABRIR CÁMARA
+     * BOTÓN DE CÁMARA
      * =====================================================
-     *
-     * IMPORTANTE:
-     *
-     * Primero solicitamos la cámara con
-     * video:true, igual que en la página
-     * de prueba que sí funcionó.
-     *
-     * NO cargamos jsQR antes.
-     *
      */
 
     document
@@ -482,6 +481,12 @@
         iniciarCamara
       );
 
+
+    /*
+     * =====================================================
+     * INICIAR CÁMARA
+     * =====================================================
+     */
 
     async function iniciarCamara() {
 
@@ -503,11 +508,6 @@
       const video =
         document.getElementById(
           "video"
-        );
-
-      const videoContenedor =
-        document.getElementById(
-          "videoContenedor"
         );
 
 
@@ -541,17 +541,16 @@
 
       /*
        * ===================================================
-       * PRIMERA PRUEBA REAL DE CÁMARA
+       * SOLICITAR CÁMARA
        * ===================================================
        */
 
       try {
 
         streamCamara =
-          const stream =
-  await navigator
-    .mediaDevices
-    .getUserMedia({
+          await navigator
+            .mediaDevices
+            .getUserMedia({
 
               video: true,
 
@@ -602,17 +601,12 @@
 
       /*
        * ===================================================
-       * SI LLEGAMOS AQUÍ, LA CÁMARA ABRIÓ
+       * CÁMARA ABIERTA
        * ===================================================
        */
 
       video.srcObject =
         streamCamara;
-
-
-      videoContenedor
-        .classList
-        .remove("oculto");
 
 
       boton.textContent =
@@ -642,7 +636,7 @@
 
       /*
        * ===================================================
-       * CARGAR jsQR DESPUÉS DE ABRIR CÁMARA
+       * CARGAR jsQR
        * ===================================================
        */
 
@@ -661,6 +655,12 @@
           error.message +
 
           "</span>";
+
+        boton.disabled =
+          false;
+
+        boton.textContent =
+          "📷 Abrir cámara";
 
         return;
 
@@ -792,14 +792,18 @@
             if (
               procesandoQR
             ) {
+
               return;
+
             }
 
 
             if (
               video.readyState < 2
             ) {
+
               return;
+
             }
 
 
@@ -814,7 +818,9 @@
               !ancho ||
               !alto
             ) {
+
               return;
+
             }
 
 
@@ -895,7 +901,9 @@
       if (
         procesandoQR
       ) {
+
         return;
+
       }
 
 
