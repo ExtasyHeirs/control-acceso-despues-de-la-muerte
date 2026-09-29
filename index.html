@@ -95,11 +95,46 @@ content="width=device-width, initial-scale=1"
     #lectorQR {
       width: 100%;
       margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #000;
+    }
+
+    #videoCamara {
+      width: 100%;
+      display: block;
+      background: #000;
+      border-radius: 12px;
+    }
+
+    #canvasQR {
+      display: none;
     }
 
     #resultadoEscaneo {
       margin-top: 16px;
       text-align: center;
+      line-height: 1.5;
+    }
+
+    .marcoQR {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 3px solid #fff;
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    .instruccionCamara {
+      color: #aaa;
+      font-size: 14px;
+      text-align: center;
+      margin-top: 12px;
       line-height: 1.5;
     }
 
@@ -165,6 +200,14 @@ content="width=device-width, initial-scale=1"
       );
 
 
+    let camaraActiva =
+      null;
+
+
+    let intervaloEscaneo =
+      null;
+
+
     function obtenerToken() {
 
       const hash =
@@ -217,10 +260,13 @@ content="width=device-width, initial-scale=1"
           );
 
 
-        boton.disabled = true;
+        boton.disabled =
+          true;
+
 
         boton.textContent =
           "⏳ Verificando...";
+
 
         mensaje.textContent =
           "";
@@ -229,13 +275,13 @@ content="width=device-width, initial-scale=1"
     );
 
 
-    function cargarLectorQR() {
+    function cargarJsQR() {
 
       return new Promise(
         function(resolve, reject) {
 
           if (
-            typeof Html5Qrcode !==
+            typeof jsQR !==
             "undefined"
           ) {
 
@@ -253,7 +299,7 @@ content="width=device-width, initial-scale=1"
 
 
           script.src =
-            "https://unpkg.com/html5-qrcode";
+            "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
 
 
           script.onload =
@@ -261,7 +307,15 @@ content="width=device-width, initial-scale=1"
 
 
           script.onerror =
-            reject;
+            function() {
+
+              reject(
+                new Error(
+                  "No se pudo cargar el lector QR."
+                )
+              );
+
+            };
 
 
           document.head.appendChild(
@@ -301,6 +355,8 @@ content="width=device-width, initial-scale=1"
           "</button>" +
 
           "<div id='lectorQR'></div>" +
+
+          "<canvas id='canvasQR'></canvas>" +
 
           "<div id='resultadoEscaneo'></div>" +
 
@@ -351,64 +407,234 @@ content="width=device-width, initial-scale=1"
 
       try {
 
-        await cargarLectorQR();
+        await cargarJsQR();
 
 
-        const lector =
-          new Html5Qrcode(
+        if (
+          !navigator.mediaDevices ||
+          !navigator.mediaDevices.getUserMedia
+        ) {
+
+          throw new Error(
+            "Este navegador no permite acceder a la cámara."
+          );
+
+        }
+
+
+        const video =
+          document.createElement(
+            "video"
+          );
+
+
+        video.id =
+          "videoCamara";
+
+
+        video.setAttribute(
+          "playsinline",
+          ""
+        );
+
+
+        video.setAttribute(
+          "autoplay",
+          ""
+        );
+
+
+        video.muted =
+          true;
+
+
+        const lectorQR =
+          document.getElementById(
             "lectorQR"
           );
 
 
-        await lector.start(
-
-          {
-            facingMode:
-              "environment"
-          },
-
-          {
-            fps: 10,
-
-            qrbox: {
-              width: 250,
-              height: 250
-            }
-
-          },
+        lectorQR.innerHTML =
+          "";
 
 
-          async function(
-            textoQR
-          ) {
-
-            await lector.stop();
-
-
-            procesarQR(
-              textoQR,
-              token
-            );
-
-          },
-
-
-          function() {
-
-            // Errores normales
-            // mientras busca QR.
-
-          }
-
+        lectorQR.appendChild(
+          video
         );
+
+
+        const marco =
+          document.createElement(
+            "div"
+          );
+
+
+        marco.className =
+          "marcoQR";
+
+
+        lectorQR.appendChild(
+          marco
+        );
+
+
+        const instruccion =
+          document.createElement(
+            "div"
+          );
+
+
+        instruccion.className =
+          "instruccionCamara";
+
+
+        instruccion.textContent =
+          "Coloca el código dentro del cuadro.";
+
+
+        lectorQR.appendChild(
+          instruccion
+        );
+
+
+        const stream =
+          await navigator.mediaDevices
+            .getUserMedia({
+
+              video: {
+
+                facingMode: {
+                  ideal: "environment"
+                }
+
+              },
+
+              audio: false
+
+            });
+
+
+        camaraActiva =
+          stream;
+
+
+        video.srcObject =
+          stream;
+
+
+        await video.play();
 
 
         boton.textContent =
           "📷 Cámara activa";
 
+
+        const canvas =
+          document.getElementById(
+            "canvasQR"
+          );
+
+
+        const contexto =
+          canvas.getContext(
+            "2d",
+            {
+              willReadFrequently: true
+            }
+          );
+
+
+        intervaloEscaneo =
+          setInterval(
+            function() {
+
+              if (
+                video.readyState <
+                2
+              ) {
+
+                return;
+
+              }
+
+
+              const ancho =
+                video.videoWidth;
+
+
+              const alto =
+                video.videoHeight;
+
+
+              if (
+                !ancho ||
+                !alto
+              ) {
+
+                return;
+
+              }
+
+
+              canvas.width =
+                ancho;
+
+
+              canvas.height =
+                alto;
+
+
+              contexto.drawImage(
+                video,
+                0,
+                0,
+                ancho,
+                alto
+              );
+
+
+              const imagen =
+                contexto.getImageData(
+                  0,
+                  0,
+                  ancho,
+                  alto
+                );
+
+
+              const codigoQR =
+                jsQR(
+                  imagen.data,
+                  imagen.width,
+                  imagen.height
+                );
+
+
+              if (
+                codigoQR &&
+                codigoQR.data
+              ) {
+
+                detenerCamara();
+
+
+                procesarQR(
+                  codigoQR.data,
+                  token
+                );
+
+              }
+
+            },
+            150
+          );
+
       }
 
       catch(error) {
+
+        detenerCamara();
+
 
         resultado.innerHTML =
           "❌ No se pudo abrir la cámara.<br><br>" +
@@ -426,6 +652,45 @@ content="width=device-width, initial-scale=1"
 
         boton.textContent =
           "📷 Intentar de nuevo";
+
+      }
+
+    }
+
+
+    function detenerCamara() {
+
+      if (
+        intervaloEscaneo
+      ) {
+
+        clearInterval(
+          intervaloEscaneo
+        );
+
+        intervaloEscaneo =
+          null;
+
+      }
+
+
+      if (
+        camaraActiva
+      ) {
+
+        camaraActiva
+          .getTracks()
+          .forEach(
+            function(track) {
+
+              track.stop();
+
+            }
+          );
+
+
+        camaraActiva =
+          null;
 
       }
 
