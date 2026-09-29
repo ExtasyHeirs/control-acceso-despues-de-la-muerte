@@ -783,15 +783,19 @@
          */
 
         if (
-          !event.origin ||
-          event.origin.indexOf(
-            "script.google.com"
-          ) === -1
-        ) {
+  !event.origin ||
+  (
+    event.origin.indexOf(
+      "script.google.com"
+    ) === -1 &&
+    event.origin.indexOf(
+      "script.googleusercontent.com"
+    ) === -1
+  )
+) {
 
-          return;
-
-        }
+  return;
+}
 
 
         if (
