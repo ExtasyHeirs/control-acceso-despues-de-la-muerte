@@ -10,7 +10,9 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <title>Prueba índice</title>
+  <title>
+    Prueba QR | Después de la muerte
+  </title>
 
 
   <style>
@@ -79,6 +81,13 @@
     }
 
 
+    canvas {
+
+      display: none;
+
+    }
+
+
     #mensaje {
 
       margin-top: 20px;
@@ -99,12 +108,12 @@
 
 
     <h1>
-      📷 Prueba índice
+      📷 Escáner QR
     </h1>
 
 
     <p>
-      Prueba independiente de cámara.
+      Prueba de cámara y lectura QR.
     </p>
 
 
@@ -123,9 +132,16 @@
     ></video>
 
 
+    <canvas
+      id="canvas"
+    ></canvas>
+
+
     <div
       id="mensaje"
-    ></div>
+    >
+      Cámara todavía no iniciada.
+    </div>
 
 
   </div>
@@ -146,10 +162,99 @@
       );
 
 
+    const canvas =
+      document.getElementById(
+        "canvas"
+      );
+
+
     const mensaje =
       document.getElementById(
         "mensaje"
       );
+
+
+    let intervalo =
+      null;
+
+
+    let procesando =
+      false;
+
+
+
+    /*
+     * =================================
+     * CARGAR jsQR
+     * =================================
+     */
+
+
+    function cargarJsQR() {
+
+      return new Promise(
+        function(resolve, reject) {
+
+
+          if (
+            window.jsQR
+          ) {
+
+            resolve();
+
+            return;
+
+          }
+
+
+          const script =
+            document.createElement(
+              "script"
+            );
+
+
+          script.src =
+            "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+
+
+          script.onload =
+            function() {
+
+              resolve();
+
+            };
+
+
+          script.onerror =
+            function() {
+
+              reject(
+                new Error(
+                  "No se pudo cargar jsQR."
+                )
+              );
+
+            };
+
+
+          document
+            .head
+            .appendChild(
+              script
+            );
+
+        }
+      );
+
+    }
+
+
+
+    /*
+     * =================================
+     * ABRIR CÁMARA
+     * =================================
+     */
 
 
     boton.addEventListener(
@@ -172,6 +277,11 @@
         try {
 
 
+          /*
+           * Primero cámara.
+           */
+
+
           const stream =
             await navigator.mediaDevices
               .getUserMedia({
@@ -189,12 +299,30 @@
             stream;
 
 
+          await video.play();
+
+
           boton.textContent =
             "✅ Cámara funcionando";
 
 
           mensaje.textContent =
-            "La cámara funciona correctamente.";
+            "Cámara activa. Cargando lector QR...";
+
+
+          /*
+           * Después jsQR.
+           */
+
+
+          await cargarJsQR();
+
+
+          mensaje.textContent =
+            "📷 Apunta la cámara a un código QR.";
+
+
+          iniciarEscaneo();
 
 
         }
@@ -212,7 +340,7 @@
 
 
           mensaje.innerHTML =
-            "❌ No se pudo abrir la cámara.<br><br>" +
+            "❌ Error.<br><br>" +
 
             "<small>" +
 
@@ -226,15 +354,130 @@
 
 
           console.error(
-            "CAMARA:",
             error
           );
-
 
         }
 
       }
     );
+
+
+
+    /*
+     * =================================
+     * ESCANEAR
+     * =================================
+     */
+
+
+    function iniciarEscaneo() {
+
+
+      const contexto =
+        canvas.getContext(
+          "2d",
+          {
+            willReadFrequently: true
+          }
+        );
+
+
+      intervalo =
+        setInterval(
+          function() {
+
+
+            if (
+              procesando
+            ) {
+
+              return;
+
+            }
+
+
+            if (
+              !video.videoWidth ||
+              !video.videoHeight
+            ) {
+
+              return;
+
+            }
+
+
+            canvas.width =
+              video.videoWidth;
+
+
+            canvas.height =
+              video.videoHeight;
+
+
+            contexto.drawImage(
+              video,
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+
+
+            const imagen =
+              contexto.getImageData(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+              );
+
+
+            const codigo =
+              window.jsQR(
+                imagen.data,
+                imagen.width,
+                imagen.height,
+                {
+                  inversionAttempts:
+                    "dontInvert"
+                }
+              );
+
+
+            if (
+              codigo &&
+              codigo.data
+            ) {
+
+
+              procesando =
+                true;
+
+
+              mensaje.innerHTML =
+                "✅ QR detectado.<br><br>" +
+
+                "<small>" +
+
+                codigo.data +
+
+                "</small>";
+
+
+              clearInterval(
+                intervalo
+              );
+
+
+            }
+
+
+          },
+          150
+        );
+
+    }
 
 
   </script>
