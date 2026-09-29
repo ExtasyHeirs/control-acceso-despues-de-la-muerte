@@ -74,6 +74,40 @@
     }
 
 
+    button {
+
+      width: 100%;
+
+      padding: 16px;
+
+      margin-top: 20px;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      font-size: 17px;
+
+      font-weight: bold;
+
+      background: #fff;
+
+      color: #111;
+
+      cursor: pointer;
+
+    }
+
+
+    button:disabled {
+
+      opacity: 0.5;
+
+      cursor: wait;
+
+    }
+
+
     video {
 
       width: 100%;
@@ -83,6 +117,8 @@
       border-radius: 15px;
 
       background: #000;
+
+      display: none;
 
     }
 
@@ -151,6 +187,15 @@
       </div>
 
 
+      <button
+        id="botonCamara"
+        type="button"
+        disabled
+      >
+        📷 Abrir cámara
+      </button>
+
+
       <video
         id="video"
         autoplay
@@ -167,7 +212,7 @@
       <div
         id="mensaje"
       >
-        Preparando cámara...
+        Preparando escáner...
       </div>
 
 
@@ -223,6 +268,12 @@
       );
 
 
+    const botonCamara =
+      document.getElementById(
+        "botonCamara"
+      );
+
+
     const contexto =
       canvas.getContext(
         "2d"
@@ -251,6 +302,7 @@
           window.location.search
         );
 
+
       return (
         parametros.get("token") ||
         ""
@@ -267,7 +319,7 @@
      */
 
 
-    async function iniciar() {
+    function iniciar() {
 
       token =
         obtenerToken();
@@ -296,25 +348,12 @@
         "✅ Sesión autorizada";
 
 
-      try {
-
-        const respuesta =
-          await fetch(
-            "https://unpkg.com/jsqr"
-          );
-
-      }
-
-      catch(error) {
-
-        console.error(
-          error
-        );
-
-      }
+      botonCamara.disabled =
+        false;
 
 
-      cargarLectorQR();
+      mensaje.textContent =
+        "Pulsa el botón para abrir la cámara.";
 
     }
 
@@ -322,62 +361,29 @@
 
     /*
      * ==================================
-     * CARGAR JSQR
+     * ABRIR CÁMARA
      * ==================================
      */
 
 
-    function cargarLectorQR() {
-
-      const script =
-        document.createElement(
-          "script"
-        );
-
-
-      script.src =
-        "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
-
-
-      script.onload =
-        function() {
-
-          iniciarCamara();
-
-        };
-
-
-      script.onerror =
-        function() {
-
-          mensaje.style.color =
-            "#ff7777";
-
-          mensaje.textContent =
-            "❌ No se pudo cargar el lector QR.";
-
-        };
-
-
-      document.head.appendChild(
-        script
-      );
-
-    }
-
-
-
-    /*
-     * ==================================
-     * CÁMARA
-     * ==================================
-     */
+    botonCamara.addEventListener(
+      "click",
+      iniciarCamara
+    );
 
 
     async function iniciarCamara() {
 
+      botonCamara.disabled =
+        true;
+
+
+      botonCamara.textContent =
+        "⏳ Abriendo cámara...";
+
+
       mensaje.textContent =
-        "📷 Solicitando acceso a la cámara...";
+        "Solicitando acceso a la cámara...";
 
 
       try {
@@ -402,36 +408,58 @@
           stream;
 
 
+        video.style.display =
+          "block";
+
+
         escaneando =
           true;
+
+
+        botonCamara.textContent =
+          "📷 Cámara activa";
 
 
         mensaje.style.color =
           "#fff";
 
+
         mensaje.textContent =
-          "📷 Apunta la cámara al código QR.";
+          "Apunta la cámara al código QR.";
 
 
-        requestAnimationFrame(
-          escanear
-        );
+        cargarLectorQR();
 
       }
 
 
       catch(error) {
 
+        botonCamara.disabled =
+          false;
+
+
+        botonCamara.textContent =
+          "📷 Intentar de nuevo";
+
+
         mensaje.style.color =
           "#ff7777";
 
+
         mensaje.innerHTML =
           "❌ No se pudo abrir la cámara.<br><br>" +
+
           "<small>" +
+
           error.name +
+
           "<br>" +
+
           error.message +
+
           "</small>";
+
 
         console.error(
           "CAMARA:",
@@ -439,6 +467,73 @@
         );
 
       }
+
+    }
+
+
+
+    /*
+     * ==================================
+     * CARGAR JSQR
+     * ==================================
+     */
+
+
+    function cargarLectorQR() {
+
+      if (
+        window.jsQR
+      ) {
+
+        requestAnimationFrame(
+          escanear
+        );
+
+        return;
+
+      }
+
+
+      const script =
+        document.createElement(
+          "script"
+        );
+
+
+      script.src =
+        "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+
+
+      script.onload =
+        function() {
+
+          requestAnimationFrame(
+            escanear
+          );
+
+        };
+
+
+      script.onerror =
+        function() {
+
+          escaneando =
+            false;
+
+
+          mensaje.style.color =
+            "#ff7777";
+
+
+          mensaje.textContent =
+            "❌ No se pudo cargar el lector QR.";
+
+        };
+
+
+      document.head.appendChild(
+        script
+      );
 
     }
 
@@ -469,6 +564,7 @@
 
         canvas.width =
           video.videoWidth;
+
 
         canvas.height =
           video.videoHeight;
@@ -565,8 +661,13 @@
       }
 
 
+      video.style.display =
+        "none";
+
+
       mensaje.style.color =
         "#fff";
+
 
       mensaje.textContent =
         "🔎 Verificando boleto...";
@@ -577,11 +678,9 @@
 
 
       /*
-       * El QR normalmente contiene
-       * la URL de validación.
-       *
        * Intentamos extraer
-       * solamente el código.
+       * el parámetro code
+       * de la URL del QR.
        */
 
 
@@ -613,9 +712,9 @@
       catch(error) {
 
         /*
-         * Si el QR no es una URL,
-         * utilizamos directamente
-         * el texto leído.
+         * Si no es una URL,
+         * usamos directamente
+         * el texto del QR.
          */
 
       }
@@ -628,8 +727,10 @@
         mensaje.style.color =
           "#ff7777";
 
+
         mensaje.textContent =
           "❌ No se encontró un código válido.";
+
 
         return;
 
@@ -637,22 +738,24 @@
 
 
       /*
-       * Enviamos el código y el token
+       * Enviamos código + token
        * al Apps Script.
-       *
-       * Apps Script realiza la validación
-       * y el consumo del boleto.
        */
 
 
       const urlResultado =
         URL_APPS_SCRIPT +
+
         "?modo=resultadoEscaneo" +
+
         "&code=" +
+
         encodeURIComponent(
           codigo
         ) +
+
         "&token=" +
+
         encodeURIComponent(
           token
         );
