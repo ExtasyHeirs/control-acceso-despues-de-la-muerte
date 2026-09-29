@@ -1,12 +1,20 @@
-<!DOCTYPE html><html lang="es"><head>  <meta charset="UTF-8"><meta
-name="viewport"
-content="width=device-width, initial-scale=1"
+<!DOCTYPE html>
+<html lang="es">
 
-«»
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
 
   <title>
     Control de acceso | Después de la muerte
-  </title>  <style>
+  </title>
+
+  <style>
 
     * {
       box-sizing: border-box;
@@ -138,51 +146,59 @@ content="width=device-width, initial-scale=1"
       line-height: 1.5;
     }
 
-  </style></head><body>  <div class="contenedor"><div class="titulo">
-  🔐 Control de acceso
-</div>
+  </style>
 
-<div class="subtitulo">
-  Después de la muerte
-</div>
+</head>
 
+<body>
 
-<div class="card" id="contenido">
+  <div class="contenedor">
 
-  <form
-    id="formularioAcceso"
-    method="POST"
-    action="https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec"
-  >
+    <div class="titulo">
+      🔐 Control de acceso
+    </div>
 
-    <label for="codigoAcceso">
-      Código de acceso
-    </label>
+    <div class="subtitulo">
+      Después de la muerte
+    </div>
 
-    <input
-      id="codigoAcceso"
-      name="codigo"
-      type="password"
-      autocomplete="off"
-      placeholder="Ingresa el código"
-      required
-    >
+    <div class="card" id="contenido">
 
-    <button
-      id="botonIngresar"
-      type="submit"
-    >
-      🔐 Ingresar
-    </button>
+      <form
+        id="formularioAcceso"
+        method="POST"
+        action="https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec"
+      >
 
-  </form>
+        <label for="codigoAcceso">
+          Código de acceso
+        </label>
 
+        <input
+          id="codigoAcceso"
+          name="codigo"
+          type="password"
+          autocomplete="off"
+          placeholder="Ingresa el código"
+          required
+        >
 
-  <div id="mensaje"></div>
+        <button
+          id="botonIngresar"
+          type="submit"
+        >
+          🔐 Ingresar
+        </button>
 
-</div>
+      </form>
 
-  </div>  <script>
+      <div id="mensaje"></div>
+
+    </div>
+
+  </div>
+
+  <script>
 
     const URL_APPS_SCRIPT =
       "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
@@ -220,7 +236,9 @@ content="width=device-width, initial-scale=1"
           "token="
         )
       ) {
+
         return null;
+
       }
 
 
@@ -402,13 +420,19 @@ content="width=device-width, initial-scale=1"
 
 
       boton.textContent =
-        "⏳ Preparando cámara...";
+        "⏳ Abriendo cámara...";
 
 
       try {
 
-        await cargarJsQR();
-
+        /*
+         * Primero solicitamos directamente
+         * el acceso a la cámara.
+         *
+         * Esto mantiene la llamada vinculada
+         * al toque del usuario, algo importante
+         * especialmente en Safari/iPad.
+         */
 
         if (
           !navigator.mediaDevices ||
@@ -420,6 +444,23 @@ content="width=device-width, initial-scale=1"
           );
 
         }
+
+
+        const stream =
+          await navigator.mediaDevices
+            .getUserMedia({
+
+              video: {
+                facingMode: "environment"
+              },
+
+              audio: false
+
+            });
+
+
+        camaraActiva =
+          stream;
 
 
         const video =
@@ -497,27 +538,6 @@ content="width=device-width, initial-scale=1"
         );
 
 
-        const stream =
-          await navigator.mediaDevices
-            .getUserMedia({
-
-              video: {
-
-                facingMode: {
-                  ideal: "environment"
-                }
-
-              },
-
-              audio: false
-
-            });
-
-
-        camaraActiva =
-          stream;
-
-
         video.srcObject =
           stream;
 
@@ -527,6 +547,14 @@ content="width=device-width, initial-scale=1"
 
         boton.textContent =
           "📷 Cámara activa";
+
+
+        /*
+         * La cámara ya abrió correctamente.
+         * Ahora cargamos jsQR.
+         */
+
+        await cargarJsQR();
 
 
         const canvas =
@@ -668,6 +696,7 @@ content="width=device-width, initial-scale=1"
           intervaloEscaneo
         );
 
+
         intervaloEscaneo =
           null;
 
@@ -779,4 +808,8 @@ content="width=device-width, initial-scale=1"
 
     }
 
-  </script></body></html>
+  </script>
+
+</body>
+
+</html>
