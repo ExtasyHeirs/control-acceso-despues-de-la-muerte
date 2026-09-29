@@ -50,25 +50,32 @@
       width: 100%;
       padding: 16px;
       margin-top: 20px;
+
       border: 0;
       border-radius: 12px;
+
       font-size: 17px;
       font-weight: bold;
+
       background: #fff;
       color: #111;
+
       cursor: pointer;
     }
 
     button:disabled {
-      opacity: 0.5;
+      opacity: .5;
       cursor: wait;
     }
 
     video {
       width: 100%;
       margin-top: 20px;
+
       border-radius: 15px;
+
       background: #000;
+
       display: none;
     }
 
@@ -84,23 +91,31 @@
 
     .estado {
       margin-top: 15px;
+
       padding: 12px;
+
       border-radius: 10px;
+
       background: #111;
       color: #aaa;
     }
 
     .resultado {
       margin-top: 20px;
+
       padding: 18px;
+
       border-radius: 14px;
+
       background: #111;
+
       display: none;
     }
 
     .resultadoTitulo {
       font-size: 24px;
       font-weight: bold;
+
       margin-bottom: 12px;
     }
 
@@ -121,9 +136,17 @@
       color: #ffd166;
     }
 
+    #iframeResultado {
+      display: none;
+      width: 1px;
+      height: 1px;
+      border: 0;
+    }
+
   </style>
 
 </head>
+
 
 <body>
 
@@ -139,12 +162,14 @@
         Después de la muerte
       </p>
 
+
       <div
         id="estadoSesion"
         class="estado"
       >
         🔐 Verificando sesión...
       </div>
+
 
       <button
         id="botonCamara"
@@ -154,6 +179,7 @@
         📷 Abrir cámara
       </button>
 
+
       <video
         id="video"
         autoplay
@@ -161,15 +187,14 @@
         muted
       ></video>
 
-      <canvas
-        id="canvas"
-      ></canvas>
 
-      <div
-        id="mensaje"
-      >
+      <canvas id="canvas"></canvas>
+
+
+      <div id="mensaje">
         Preparando escáner...
       </div>
+
 
       <div
         id="resultado"
@@ -181,10 +206,12 @@
           class="resultadoTitulo"
         ></div>
 
+
         <div
           id="resultadoInfo"
           class="resultadoInfo"
         ></div>
+
 
         <button
           id="botonOtro"
@@ -194,6 +221,12 @@
         </button>
 
       </div>
+
+
+      <iframe
+        id="iframeResultado"
+        title="Verificación"
+      ></iframe>
 
     </div>
 
@@ -257,6 +290,12 @@
     const botonOtro =
       document.getElementById(
         "botonOtro"
+      );
+
+
+    const iframeResultado =
+      document.getElementById(
+        "iframeResultado"
       );
 
 
@@ -342,17 +381,27 @@
         resultado.style.display =
           "none";
 
+        boletoEnProceso =
+          false;
+
+        escaneando =
+          true;
+
         mensaje.style.color =
           "#aaa";
 
         mensaje.textContent =
-          "Listo para escanear otro boleto.";
+          "Apunta la cámara al siguiente código QR.";
 
         botonCamara.disabled =
-          false;
+          true;
 
         botonCamara.textContent =
-          "📷 Abrir cámara";
+          "📷 Cámara activa";
+
+        requestAnimationFrame(
+          escanear
+        );
 
       }
     );
@@ -363,7 +412,6 @@
       botonCamara.disabled =
         true;
 
-
       botonCamara.textContent =
         "⏳ Abriendo cámara...";
 
@@ -371,28 +419,27 @@
       mensaje.style.color =
         "#aaa";
 
-
       mensaje.textContent =
         "Solicitando acceso a la cámara...";
 
 
       try {
 
-        detenerCamara();
+        if (!stream) {
 
+          stream =
+            await navigator.mediaDevices.getUserMedia(
+              {
+                video: {
+                  facingMode:
+                    "environment"
+                },
 
-        stream =
-          await navigator.mediaDevices
-            .getUserMedia({
+                audio: false
+              }
+            );
 
-              video: {
-                facingMode:
-                  "environment"
-              },
-
-              audio: false
-
-            });
+        }
 
 
         video.srcObject =
@@ -418,7 +465,6 @@
         mensaje.style.color =
           "#fff";
 
-
         mensaje.textContent =
           "Apunta la cámara al código QR.";
 
@@ -436,7 +482,6 @@
         botonCamara.disabled =
           false;
 
-
         botonCamara.textContent =
           "📷 Intentar de nuevo";
 
@@ -447,10 +492,15 @@
 
         mensaje.innerHTML =
           "❌ No se pudo abrir la cámara.<br><br>" +
+
           "<small>" +
+
           error.name +
+
           "<br>" +
+
           error.message +
+
           "</small>";
 
 
@@ -464,61 +514,9 @@
     }
 
 
-    function detenerCamara() {
-
-      escaneando =
-        false;
-
-
-      if (
-        stream
-      ) {
-
-        stream
-          .getTracks()
-          .forEach(
-            function(track) {
-
-              try {
-
-                track.stop();
-
-              }
-
-              catch(error) {
-
-                console.error(
-                  "ERROR AL DETENER TRACK:",
-                  error
-                );
-
-              }
-
-            }
-          );
-
-      }
-
-
-      stream =
-        null;
-
-
-      video.srcObject =
-        null;
-
-
-      video.style.display =
-        "none";
-
-    }
-
-
     function cargarLectorQR() {
 
-      if (
-        window.jsQR
-      ) {
+      if (window.jsQR) {
 
         requestAnimationFrame(
           escanear
@@ -556,9 +554,6 @@
             false;
 
 
-          detenerCamara();
-
-
           mensaje.style.color =
             "#ff7777";
 
@@ -578,12 +573,8 @@
 
     function escanear() {
 
-      if (
-        !escaneando
-      ) {
-
+      if (!escaneando) {
         return;
-
       }
 
 
@@ -671,9 +662,6 @@
         false;
 
 
-      detenerCamara();
-
-
       mensaje.style.color =
         "#fff";
 
@@ -700,9 +688,7 @@
           );
 
 
-        if (
-          codigoURL
-        ) {
+        if (codigoURL) {
 
           codigo =
             codigoURL;
@@ -712,12 +698,6 @@
       }
 
       catch(error) {
-
-        /*
-         * Si no es una URL,
-         * usamos directamente
-         * el texto del QR.
-         */
 
       }
 
@@ -736,39 +716,31 @@
       /*
        * IMPORTANTE:
        *
-       * Ya no navegamos a Apps Script.
+       * Ya no usamos window.open().
        *
-       * El resultado llegará a esta
-       * misma página mediante comunicación
-       * entre ventanas.
+       * Apps Script se carga en este
+       * iframe oculto.
+       *
+       * La cámara permanece en esta
+       * misma página.
        */
 
-      const ventana =
-        window.open(
-          URL_APPS_SCRIPT +
-          "?modo=resultadoEscaneo" +
-          "&code=" +
-          encodeURIComponent(
-            codigo
-          ) +
-          "&token=" +
-          encodeURIComponent(
-            token
-          ),
-          "resultadoBoleto"
+      iframeResultado.src =
+        URL_APPS_SCRIPT +
+
+        "?modo=resultadoEscaneo" +
+
+        "&code=" +
+
+        encodeURIComponent(
+          codigo
+        ) +
+
+        "&token=" +
+
+        encodeURIComponent(
+          token
         );
-
-
-      if (!ventana) {
-
-        mostrarError(
-          "❌ El navegador bloqueó la ventana de verificación."
-        );
-
-        boletoEnProceso =
-          false;
-
-      }
 
     }
 
@@ -777,31 +749,28 @@
       "message",
       function(event) {
 
-        /*
-         * Solo aceptamos mensajes
-         * provenientes de Apps Script.
-         */
-
         if (
-  !event.origin ||
-  (
-    event.origin.indexOf(
-      "script.google.com"
-    ) === -1 &&
-    event.origin.indexOf(
-      "script.googleusercontent.com"
-    ) === -1
-  )
-) {
+          !event.origin ||
+          (
+            event.origin.indexOf(
+              "script.google.com"
+            ) === -1 &&
 
-  return;
-}
+            event.origin.indexOf(
+              "script.googleusercontent.com"
+            ) === -1
+          )
+        ) {
+
+          return;
+
+        }
 
 
         if (
           !event.data ||
           event.data.tipo !==
-          "RESULTADO_BOLETO"
+            "RESULTADO_BOLETO"
         ) {
 
           return;
@@ -848,21 +817,37 @@
         resultadoTitulo.className =
           "resultadoTitulo verde";
 
+
         resultadoTitulo.textContent =
           "🟢 ENTRADA VÁLIDA";
 
 
         resultadoInfo.innerHTML =
-          "<strong>Acceso autorizado</strong><br><br>" +
+
+          "<strong>" +
+
+          "Acceso autorizado" +
+
+          "</strong><br><br>" +
+
           "Folio: " +
-          (datos.folio || "Sin folio") +
+
+          (datos.folio ||
+            "Sin folio") +
+
           "<br>" +
+
           "Nombre: " +
-          (datos.nombre || "No registrado") +
+
+          (datos.nombre ||
+            "No registrado") +
+
           "<br><br>" +
+
           "Esta entrada acaba de ser registrada.";
 
       }
+
 
       else if (
         datos.resultado ===
@@ -872,21 +857,37 @@
         resultadoTitulo.className =
           "resultadoTitulo rojo";
 
+
         resultadoTitulo.textContent =
           "🔴 YA UTILIZADA";
 
 
         resultadoInfo.innerHTML =
-          "<strong>NO PERMITIR ACCESO</strong><br><br>" +
+
+          "<strong>" +
+
+          "NO PERMITIR ACCESO" +
+
+          "</strong><br><br>" +
+
           "Folio: " +
-          (datos.folio || "Sin folio") +
+
+          (datos.folio ||
+            "Sin folio") +
+
           "<br>" +
+
           "Nombre: " +
-          (datos.nombre || "No registrado") +
+
+          (datos.nombre ||
+            "No registrado") +
+
           "<br><br>" +
+
           "Esta entrada ya fue registrada anteriormente.";
 
       }
+
 
       else if (
         datos.resultado ===
@@ -895,6 +896,7 @@
 
         resultadoTitulo.className =
           "resultadoTitulo rojo";
+
 
         resultadoTitulo.textContent =
           "🚫 ENTRADA CANCELADA";
@@ -906,6 +908,7 @@
 
       }
 
+
       else if (
         datos.resultado ===
         "CERRADA"
@@ -914,17 +917,27 @@
         resultadoTitulo.className =
           "resultadoTitulo amarillo";
 
+
         resultadoTitulo.textContent =
           "🟡 ENTRADA AÚN NO ABIERTA";
 
 
         resultadoInfo.innerHTML =
+
           "Folio: " +
-          (datos.folio || "Sin folio") +
+
+          (datos.folio ||
+            "Sin folio") +
+
           "<br>" +
+
           "Nombre: " +
-          (datos.nombre || "No registrado") +
+
+          (datos.nombre ||
+            "No registrado") +
+
           "<br><br>" +
+
           (
             datos.mensaje ||
             "La entrada todavía no está abierta."
@@ -932,10 +945,12 @@
 
       }
 
+
       else {
 
         resultadoTitulo.className =
           "resultadoTitulo rojo";
+
 
         resultadoTitulo.textContent =
           "❌ ENTRADA NO VÁLIDA";
@@ -948,16 +963,12 @@
       }
 
 
+      mensaje.style.color =
+        "#fff";
+
+
       mensaje.textContent =
         "Resultado de la verificación.";
-
-
-      botonCamara.disabled =
-        true;
-
-
-      botonCamara.textContent =
-        "📷 Cámara detenida";
 
     }
 
