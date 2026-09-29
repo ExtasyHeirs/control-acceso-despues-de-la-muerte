@@ -11,7 +11,7 @@
   >
 
   <title>
-    Prueba cámara | Después de la muerte
+    Control de acceso | Después de la muerte
   </title>
 
 
@@ -53,14 +53,14 @@
 
       padding: 25px;
 
-      margin-bottom: 20px;
-
     }
 
 
     h1 {
 
       margin-top: 0;
+
+      font-size: 28px;
 
     }
 
@@ -70,48 +70,6 @@
       color: #aaa;
 
       line-height: 1.5;
-
-    }
-
-
-    input {
-
-      width: 100%;
-
-      padding: 15px;
-
-      margin-top: 15px;
-
-      border: 0;
-
-      border-radius: 10px;
-
-      font-size: 17px;
-
-      box-sizing: border-box;
-
-    }
-
-
-    button {
-
-      width: 100%;
-
-      padding: 16px;
-
-      margin-top: 20px;
-
-      border: 0;
-
-      border-radius: 10px;
-
-      font-size: 17px;
-
-      font-weight: bold;
-
-      background: #fff;
-
-      color: #111;
 
     }
 
@@ -136,13 +94,28 @@
     }
 
 
-    #,
-
-    #mensajeScanner {
+    #mensaje {
 
       margin-top: 20px;
 
       line-height: 1.5;
+
+      color: #aaa;
+
+    }
+
+
+    .estado {
+
+      margin-top: 15px;
+
+      padding: 12px;
+
+      border-radius: 10px;
+
+      background: #111;
+
+      color: #aaa;
 
     }
 
@@ -157,89 +130,25 @@
   <div class="contenedor">
 
 
-    <!-- ========================= -->
-    <!-- LOGIN -->
-    <!-- ========================= -->
-
-
     <div class="tarjeta">
 
 
       <h1>
-        🔐 Control de acceso
+        🎟️ Control de acceso
       </h1>
 
 
       <p>
-        Ingresa el código de acceso.
+        Después de la muerte
       </p>
-
-
-      <form
-        id="formularioLogin"
-        method="POST"
-        action="https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec"
-      >
-
-
-        <input
-          type="password"
-          name="codigo"
-          id="codigoAcceso"
-          placeholder="Código de acceso"
-          autocomplete="off"
-          required
-        >
-
-
-        <button
-          type="submit"
-        >
-          🔓 Entrar
-        </button>
-
-
-      </form>
 
 
       <div
-        id="mensajeLogin"
-      ></div>
-<button
-  id="botonSimular"
-  type="button"
->
-  🔓 Simular acceso
-</button>
-
-    </div>
-
-
-
-    <!-- ========================= -->
-    <!-- CÁMARA -->
-    <!-- ========================= -->
-
-
-    <div class="tarjeta">
-
-
-      <h1>
-        📷 Prueba de cámara
-      </h1>
-
-
-      <p>
-        Esta cámara está visible desde que carga la página.
-      </p>
-
-
-      <button
-        id="boton"
-        type="button"
+        id="estadoSesion"
+        class="estado"
       >
-        📷 Abrir cámara
-      </button>
+        🔐 Verificando sesión...
+      </div>
 
 
       <video
@@ -256,9 +165,9 @@
 
 
       <div
-        id="mensajeScanner"
+        id="mensaje"
       >
-        Cámara todavía no iniciada.
+        Preparando cámara...
       </div>
 
 
@@ -274,46 +183,187 @@
 
     /*
      * ==================================
-     * LOGIN
+     * CONFIGURACIÓN
      * ==================================
      */
 
 
-    document
-      .getElementById(
-        "formularioLogin"
-      )
-      .addEventListener(
-        "submit",
-        function() {
-document
-  .getElementById(
-    "botonSimular"
-  )
-  .addEventListener(
-    "click",
-    function() {
+    const URL_APPS_SCRIPT =
+      "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
 
-      document
-        .getElementById(
-          "mensajeLogin"
-        )
-        .textContent =
-          "✅ Acceso autorizado.";
+
+    /*
+     * ==================================
+     * ELEMENTOS
+     * ==================================
+     */
+
+
+    const video =
+      document.getElementById(
+        "video"
+      );
+
+
+    const canvas =
+      document.getElementById(
+        "canvas"
+      );
+
+
+    const mensaje =
+      document.getElementById(
+        "mensaje"
+      );
+
+
+    const estadoSesion =
+      document.getElementById(
+        "estadoSesion"
+      );
+
+
+    const contexto =
+      canvas.getContext(
+        "2d"
+      );
+
+
+    let token = "";
+
+    let escaneando = false;
+
+    let stream = null;
+
+
+
+    /*
+     * ==================================
+     * OBTENER TOKEN
+     * ==================================
+     */
+
+
+    function obtenerToken() {
+
+      const parametros =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      return (
+        parametros.get("token") ||
+        ""
+      );
 
     }
-  );
-
-          document
-            .getElementById(
-              "mensajeLogin"
-            )
-            .textContent =
-              "⏳ Verificando acceso...";
 
 
-        }
+
+    /*
+     * ==================================
+     * INICIAR
+     * ==================================
+     */
+
+
+    async function iniciar() {
+
+      token =
+        obtenerToken();
+
+
+      if (!token) {
+
+        estadoSesion.style.color =
+          "#ff7777";
+
+        estadoSesion.textContent =
+          "❌ Sesión no autorizada.";
+
+        mensaje.textContent =
+          "Regresa al inicio e ingresa nuevamente.";
+
+        return;
+
+      }
+
+
+      estadoSesion.style.color =
+        "#7CFF8A";
+
+      estadoSesion.textContent =
+        "✅ Sesión autorizada";
+
+
+      try {
+
+        const respuesta =
+          await fetch(
+            "https://unpkg.com/jsqr"
+          );
+
+      }
+
+      catch(error) {
+
+        console.error(
+          error
+        );
+
+      }
+
+
+      cargarLectorQR();
+
+    }
+
+
+
+    /*
+     * ==================================
+     * CARGAR JSQR
+     * ==================================
+     */
+
+
+    function cargarLectorQR() {
+
+      const script =
+        document.createElement(
+          "script"
+        );
+
+
+      script.src =
+        "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+
+
+      script.onload =
+        function() {
+
+          iniciarCamara();
+
+        };
+
+
+      script.onerror =
+        function() {
+
+          mensaje.style.color =
+            "#ff7777";
+
+          mensaje.textContent =
+            "❌ No se pudo cargar el lector QR.";
+
+        };
+
+
+      document.head.appendChild(
+        script
       );
+
+    }
 
 
 
@@ -324,107 +374,305 @@ document
      */
 
 
-    const boton =
-      document.getElementById(
-        "boton"
-      );
+    async function iniciarCamara() {
+
+      mensaje.textContent =
+        "📷 Solicitando acceso a la cámara...";
 
 
-    const video =
-      document.getElementById(
-        "video"
-      );
+      try {
+
+        stream =
+          await navigator.mediaDevices
+            .getUserMedia({
+
+              video: {
+
+                facingMode:
+                  "environment"
+
+              },
+
+              audio: false
+
+            });
 
 
-    const mensaje =
-      document.getElementById(
-        "mensajeScanner"
-      );
+        video.srcObject =
+          stream;
 
 
-    boton.addEventListener(
-      "click",
-      async function() {
-
-
-        boton.disabled =
+        escaneando =
           true;
 
 
-        boton.textContent =
-          "⏳ Abriendo cámara...";
-
+        mensaje.style.color =
+          "#fff";
 
         mensaje.textContent =
-          "";
+          "📷 Apunta la cámara al código QR.";
 
 
-        try {
+        requestAnimationFrame(
+          escanear
+        );
+
+      }
 
 
-          const stream =
-            await navigator.mediaDevices
-              .getUserMedia({
+      catch(error) {
 
-                video: {
-                  facingMode: "environment"
-                },
+        mensaje.style.color =
+          "#ff7777";
 
-                audio: false
+        mensaje.innerHTML =
+          "❌ No se pudo abrir la cámara.<br><br>" +
+          "<small>" +
+          error.name +
+          "<br>" +
+          error.message +
+          "</small>";
 
-              });
+        console.error(
+          "CAMARA:",
+          error
+        );
 
+      }
 
-          video.srcObject =
-            stream;
-
-
-          boton.textContent =
-            "✅ Cámara funcionando";
-
-
-          mensaje.textContent =
-            "La cámara funciona correctamente.";
+    }
 
 
-        }
+
+    /*
+     * ==================================
+     * ESCANEAR QR
+     * ==================================
+     */
 
 
-        catch(error) {
+    function escanear() {
+
+      if (
+        !escaneando
+      ) {
+
+        return;
+
+      }
 
 
-          boton.disabled =
-            false;
+      if (
+        video.readyState ===
+        video.HAVE_ENOUGH_DATA
+      ) {
+
+        canvas.width =
+          video.videoWidth;
+
+        canvas.height =
+          video.videoHeight;
 
 
-          boton.textContent =
-            "📷 Intentar de nuevo";
+        contexto.drawImage(
+          video,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
 
 
-          mensaje.innerHTML =
-            "❌ No se pudo abrir la cámara.<br><br>" +
-
-            "<small>" +
-
-            error.name +
-
-            "<br>" +
-
-            error.message +
-
-            "</small>";
-
-
-          console.error(
-            "CAMARA:",
-            error
+        const imagen =
+          contexto.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
           );
 
+
+        const codigoQR =
+          jsQR(
+            imagen.data,
+            imagen.width,
+            imagen.height
+          );
+
+
+        if (
+          codigoQR &&
+          codigoQR.data
+        ) {
+
+          procesarQR(
+            codigoQR.data
+          );
+
+          return;
 
         }
 
       }
-    );
+
+
+      requestAnimationFrame(
+        escanear
+      );
+
+    }
+
+
+
+    /*
+     * ==================================
+     * PROCESAR QR
+     * ==================================
+     */
+
+
+    function procesarQR(
+      textoQR
+    ) {
+
+      if (
+        !escaneando
+      ) {
+
+        return;
+
+      }
+
+
+      escaneando =
+        false;
+
+
+      if (
+        stream
+      ) {
+
+        stream
+          .getTracks()
+          .forEach(
+            function(track) {
+
+              track.stop();
+
+            }
+          );
+
+      }
+
+
+      mensaje.style.color =
+        "#fff";
+
+      mensaje.textContent =
+        "🔎 Verificando boleto...";
+
+
+      let codigo =
+        textoQR.trim();
+
+
+      /*
+       * El QR normalmente contiene
+       * la URL de validación.
+       *
+       * Intentamos extraer
+       * solamente el código.
+       */
+
+
+      try {
+
+        const url =
+          new URL(
+            textoQR
+          );
+
+
+        const codigoURL =
+          url.searchParams.get(
+            "code"
+          );
+
+
+        if (
+          codigoURL
+        ) {
+
+          codigo =
+            codigoURL;
+
+        }
+
+      }
+
+      catch(error) {
+
+        /*
+         * Si el QR no es una URL,
+         * utilizamos directamente
+         * el texto leído.
+         */
+
+      }
+
+
+      if (
+        !codigo
+      ) {
+
+        mensaje.style.color =
+          "#ff7777";
+
+        mensaje.textContent =
+          "❌ No se encontró un código válido.";
+
+        return;
+
+      }
+
+
+      /*
+       * Enviamos el código y el token
+       * al Apps Script.
+       *
+       * Apps Script realiza la validación
+       * y el consumo del boleto.
+       */
+
+
+      const urlResultado =
+        URL_APPS_SCRIPT +
+        "?modo=resultadoEscaneo" +
+        "&code=" +
+        encodeURIComponent(
+          codigo
+        ) +
+        "&token=" +
+        encodeURIComponent(
+          token
+        );
+
+
+      window.location.href =
+        urlResultado;
+
+    }
+
+
+
+    /*
+     * ==================================
+     * ARRANQUE
+     * ==================================
+     */
+
+
+    iniciar();
 
 
   </script>
