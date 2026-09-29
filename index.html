@@ -136,7 +136,7 @@
     }
 
 
-    #mensajeLogin,
+    #,
 
     #mensajeScanner {
 
@@ -205,7 +205,12 @@
       <div
         id="mensajeLogin"
       ></div>
-
+<button
+  id="botonSimular"
+  type="button"
+>
+  🔓 Simular acceso
+</button>
 
     </div>
 
@@ -281,7 +286,23 @@
       .addEventListener(
         "submit",
         function() {
+document
+  .getElementById(
+    "botonSimular"
+  )
+  .addEventListener(
+    "click",
+    function() {
 
+      document
+        .getElementById(
+          "mensajeLogin"
+        )
+        .textContent =
+          "✅ Acceso autorizado.";
+
+    }
+  );
 
           document
             .getElementById(
