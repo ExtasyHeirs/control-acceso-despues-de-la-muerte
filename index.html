@@ -384,8 +384,23 @@
 
     await cargarLectorQR();
 
-    const camaras =
-      await Html5Qrcode.getCameras();
+const permisoCamara =
+  await navigator.mediaDevices.getUserMedia({
+    video: {
+      facingMode: {
+        ideal: "environment"
+      }
+    }
+  });
+
+permisoCamara
+  .getTracks()
+  .forEach(function(track) {
+    track.stop();
+  });
+
+const camaras =
+  await Html5Qrcode.getCameras();
 
     if (
       !camaras ||
