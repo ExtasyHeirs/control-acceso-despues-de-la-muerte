@@ -14,170 +14,101 @@
     Control de acceso | Después de la muerte
   </title>
 
-
   <style>
 
     body {
-
       margin: 0;
-
       padding: 20px;
-
       background: #111;
-
       color: #fff;
-
       font-family:
         Arial,
         sans-serif;
-
       text-align: center;
-
     }
-
 
     .contenedor {
-
       max-width: 500px;
-
       margin: 40px auto;
-
     }
-
 
     .tarjeta {
-
       background: #1c1c1c;
-
       border-radius: 18px;
-
       padding: 25px;
-
     }
-
 
     h1 {
-
       margin-top: 0;
-
       font-size: 28px;
-
     }
-
 
     p {
-
       color: #aaa;
-
       line-height: 1.5;
-
     }
-
 
     button {
-
       width: 100%;
-
       padding: 16px;
-
       margin-top: 20px;
-
       border: 0;
-
       border-radius: 12px;
-
       font-size: 17px;
-
       font-weight: bold;
-
       background: #fff;
-
       color: #111;
-
       cursor: pointer;
-
     }
-
 
     button:disabled {
-
       opacity: 0.5;
-
       cursor: wait;
-
     }
-
 
     video {
-
       width: 100%;
-
       margin-top: 20px;
-
       border-radius: 15px;
-
       background: #000;
-
       display: none;
-
     }
-
 
     canvas {
-
       display: none;
-
     }
-
 
     #mensaje {
-
       margin-top: 20px;
-
       line-height: 1.5;
-
       color: #aaa;
-
     }
 
-
     .estado {
-
       margin-top: 15px;
-
       padding: 12px;
-
       border-radius: 10px;
-
       background: #111;
-
       color: #aaa;
-
     }
 
   </style>
 
 </head>
 
-
 <body>
-
 
   <div class="contenedor">
 
-
     <div class="tarjeta">
-
 
       <h1>
         🎟️ Control de acceso
       </h1>
 
-
       <p>
         Después de la muerte
       </p>
-
 
       <div
         id="estadoSesion"
@@ -185,7 +116,6 @@
       >
         🔐 Verificando sesión...
       </div>
-
 
       <button
         id="botonCamara"
@@ -195,7 +125,6 @@
         📷 Abrir cámara
       </button>
 
-
       <video
         id="video"
         autoplay
@@ -203,11 +132,9 @@
         muted
       ></video>
 
-
       <canvas
         id="canvas"
       ></canvas>
-
 
       <div
         id="mensaje"
@@ -215,33 +142,14 @@
         Preparando escáner...
       </div>
 
-
     </div>
-
 
   </div>
 
-
-
   <script>
-
-
-    /*
-     * ==================================
-     * CONFIGURACIÓN
-     * ==================================
-     */
-
 
     const URL_APPS_SCRIPT =
       "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
-
-
-    /*
-     * ==================================
-     * ELEMENTOS
-     * ==================================
-     */
 
 
     const video =
@@ -286,13 +194,7 @@
 
     let stream = null;
 
-
-
-    /*
-     * ==================================
-     * OBTENER TOKEN
-     * ==================================
-     */
+    let regresoDesdeResultado = false;
 
 
     function obtenerToken() {
@@ -302,21 +204,12 @@
           window.location.search
         );
 
-
       return (
         parametros.get("token") ||
         ""
       );
 
     }
-
-
-
-    /*
-     * ==================================
-     * INICIAR
-     * ==================================
-     */
 
 
     function iniciar() {
@@ -355,15 +248,24 @@
       mensaje.textContent =
         "Pulsa el botón para abrir la cámara.";
 
+
+      /*
+       * Detectamos si la página fue abierta
+       * desde el botón "Escanear otro boleto".
+       */
+      if (
+        document.referrer &&
+        document.referrer.indexOf(
+          "script.google.com"
+        ) !== -1
+      ) {
+
+        regresoDesdeResultado =
+          true;
+
+      }
+
     }
-
-
-
-    /*
-     * ==================================
-     * ABRIR CÁMARA
-     * ==================================
-     */
 
 
     botonCamara.addEventListener(
@@ -379,7 +281,27 @@
 
 
       botonCamara.textContent =
-        "⏳ Abriendo cámara...";
+        "⏳ Preparando cámara...";
+
+
+      mensaje.textContent =
+        "Preparando cámara...";
+
+
+      /*
+       * Si venimos desde "Escanear otro boleto",
+       * esperamos un poco antes de pedir nuevamente
+       * acceso al dispositivo.
+       */
+      if (
+        regresoDesdeResultado
+      ) {
+
+        await esperar(
+          1200
+        );
+
+      }
 
 
       mensaje.textContent =
@@ -388,15 +310,20 @@
 
       try {
 
+        /*
+         * Por seguridad, detenemos cualquier
+         * stream que todavía pudiera existir.
+         */
+        detenerCamara();
+
+
         stream =
           await navigator.mediaDevices
             .getUserMedia({
 
               video: {
-
                 facingMode:
                   "environment"
-
               },
 
               audio: false
@@ -416,6 +343,10 @@
           true;
 
 
+        regresoDesdeResultado =
+          false;
+
+
         botonCamara.textContent =
           "📷 Cámara activa";
 
@@ -431,7 +362,6 @@
         cargarLectorQR();
 
       }
-
 
       catch(error) {
 
@@ -449,15 +379,10 @@
 
         mensaje.innerHTML =
           "❌ No se pudo abrir la cámara.<br><br>" +
-
           "<small>" +
-
           error.name +
-
           "<br>" +
-
           error.message +
-
           "</small>";
 
 
@@ -471,12 +396,72 @@
     }
 
 
+    function esperar(
+      milisegundos
+    ) {
 
-    /*
-     * ==================================
-     * CARGAR JSQR
-     * ==================================
-     */
+      return new Promise(
+        function(resolve) {
+
+          setTimeout(
+            resolve,
+            milisegundos
+          );
+
+        }
+      );
+
+    }
+
+
+    function detenerCamara() {
+
+      escaneando =
+        false;
+
+
+      if (
+        stream
+      ) {
+
+        stream
+          .getTracks()
+          .forEach(
+            function(track) {
+
+              try {
+
+                track.stop();
+
+              }
+
+              catch(error) {
+
+                console.error(
+                  "ERROR AL DETENER TRACK:",
+                  error
+                );
+
+              }
+
+            }
+          );
+
+      }
+
+
+      stream =
+        null;
+
+
+      video.srcObject =
+        null;
+
+
+      video.style.display =
+        "none";
+
+    }
 
 
     function cargarLectorQR() {
@@ -521,6 +506,9 @@
             false;
 
 
+          detenerCamara();
+
+
           mensaje.style.color =
             "#ff7777";
 
@@ -536,14 +524,6 @@
       );
 
     }
-
-
-
-    /*
-     * ==================================
-     * ESCANEAR QR
-     * ==================================
-     */
 
 
     function escanear() {
@@ -619,14 +599,6 @@
     }
 
 
-
-    /*
-     * ==================================
-     * PROCESAR QR
-     * ==================================
-     */
-
-
     function procesarQR(
       textoQR
     ) {
@@ -644,25 +616,7 @@
         false;
 
 
-      if (
-        stream
-      ) {
-
-        stream
-          .getTracks()
-          .forEach(
-            function(track) {
-
-              track.stop();
-
-            }
-          );
-
-      }
-
-
-      video.style.display =
-        "none";
+      detenerCamara();
 
 
       mensaje.style.color =
@@ -675,13 +629,6 @@
 
       let codigo =
         textoQR.trim();
-
-
-      /*
-       * Intentamos extraer
-       * el parámetro code
-       * de la URL del QR.
-       */
 
 
       try {
@@ -732,30 +679,27 @@
           "❌ No se encontró un código válido.";
 
 
+        botonCamara.disabled =
+          false;
+
+
+        botonCamara.textContent =
+          "📷 Abrir cámara";
+
+
         return;
 
       }
 
 
-      /*
-       * Enviamos código + token
-       * al Apps Script.
-       */
-
-
       const urlResultado =
         URL_APPS_SCRIPT +
-
         "?modo=resultadoEscaneo" +
-
         "&code=" +
-
         encodeURIComponent(
           codigo
         ) +
-
         "&token=" +
-
         encodeURIComponent(
           token
         );
@@ -767,19 +711,9 @@
     }
 
 
-
-    /*
-     * ==================================
-     * ARRANQUE
-     * ==================================
-     */
-
-
     iniciar();
 
-
   </script>
-
 
 </body>
 
