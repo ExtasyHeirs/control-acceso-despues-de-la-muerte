@@ -51,8 +51,32 @@
       padding: 22px;
     }
 
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #ccc;
+      font-size: 14px;
+    }
+
+    input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #444;
+      background: #111;
+      color: #fff;
+      font-size: 18px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #fff;
+    }
+
     button {
       width: 100%;
+      margin-top: 16px;
       padding: 15px;
       border: 0;
       border-radius: 10px;
@@ -65,6 +89,15 @@
 
     button:disabled {
       opacity: 0.5;
+      cursor: wait;
+    }
+
+    #mensaje {
+      margin-top: 16px;
+      text-align: center;
+      color: #ff7777;
+      min-height: 20px;
+      line-height: 1.5;
     }
 
     #lectorQR {
@@ -72,11 +105,10 @@
       margin-top: 20px;
     }
 
-    #resultado {
+    #resultadoEscaneo {
       margin-top: 16px;
       text-align: center;
       line-height: 1.5;
-      color: #aaa;
     }
 
   </style>
@@ -96,20 +128,39 @@
       Después de la muerte
     </div>
 
-    <div class="card">
 
-      <button
-        id="botonCamara"
-        type="button"
+    <div class="card" id="contenido">
+
+      <form
+        id="formularioAcceso"
+        method="POST"
+        action="https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec"
       >
-        📷 Abrir cámara
-      </button>
 
-      <div id="lectorQR"></div>
+        <label for="codigoAcceso">
+          Código de acceso
+        </label>
 
-      <div id="resultado">
-        Pulsa el botón para iniciar el escáner.
-      </div>
+        <input
+          id="codigoAcceso"
+          name="codigo"
+          type="password"
+          autocomplete="off"
+          placeholder="Ingresa el código"
+          required
+        >
+
+        <button
+          id="botonIngresar"
+          type="submit"
+        >
+          🔐 Ingresar
+        </button>
+
+      </form>
+
+
+      <div id="mensaje"></div>
 
     </div>
 
@@ -122,25 +173,95 @@
       "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
 
 
-    const boton =
+    const formulario =
       document.getElementById(
-        "botonCamara"
-      );
-
-    const lectorQR =
-      document.getElementById(
-        "lectorQR"
-      );
-
-    const resultado =
-      document.getElementById(
-        "resultado"
+        "formularioAcceso"
       );
 
 
-    boton.addEventListener(
-      "click",
-      iniciarCamara
+    const mensaje =
+      document.getElementById(
+        "mensaje"
+      );
+
+
+    /*
+     * Si Apps Script nos devuelve
+     * a esta página con #token=...
+     * guardamos el token en la sesión.
+     */
+
+    function obtenerToken() {
+
+      const hash =
+        window.location.hash;
+
+
+      if (
+        !hash ||
+        !hash.includes(
+          "token="
+        )
+      ) {
+        return null;
+      }
+
+
+      const parametros =
+        new URLSearchParams(
+          hash.substring(1)
+        );
+
+
+      return parametros.get(
+        "token"
+      );
+
+    }
+
+
+    const token =
+      obtenerToken();
+
+
+    if (token) {
+
+      mostrarEscaner(
+        token
+      );
+
+    }
+
+
+    /*
+     * Inicio de sesión.
+     *
+     * El formulario se manda
+     * directamente a Apps Script.
+     *
+     * La contraseña nunca queda
+     * escrita en este archivo.
+     */
+
+    formulario.addEventListener(
+      "submit",
+      function() {
+
+        const boton =
+          document.getElementById(
+            "botonIngresar"
+          );
+
+
+        boton.disabled = true;
+
+        boton.textContent =
+          "⏳ Verificando...";
+
+        mensaje.textContent =
+          "";
+
+      }
     );
 
 
@@ -160,19 +281,24 @@
 
           }
 
+
           const script =
             document.createElement(
               "script"
             );
 
+
           script.src =
             "https://unpkg.com/html5-qrcode";
+
 
           script.onload =
             resolve;
 
+
           script.onerror =
             reject;
+
 
           document.head.appendChild(
             script
@@ -184,15 +310,79 @@
     }
 
 
-    async function iniciarCamara() {
+    async function mostrarEscaner(
+      token
+    ) {
 
-      boton.disabled = true;
+      const contenido =
+        document.getElementById(
+          "contenido"
+        );
+
+
+      contenido.innerHTML =
+
+        "<div style='text-align:center;'>" +
+
+          "<div style='font-size:24px;font-weight:bold;margin-bottom:8px;'>" +
+            "📷 Escanear boleto" +
+          "</div>" +
+
+          "<div style='color:#aaa;font-size:14px;margin-bottom:20px;'>" +
+            "Apunta la cámara al código QR del boleto." +
+          "</div>" +
+
+          "<button id='botonCamara' type='button'>" +
+            "📷 Abrir cámara" +
+          "</button>" +
+
+          "<div id='lectorQR'></div>" +
+
+          "<div id='resultadoEscaneo'></div>" +
+
+        "</div>";
+
+
+      document
+        .getElementById(
+          "botonCamara"
+        )
+        .addEventListener(
+          "click",
+          function() {
+
+            iniciarCamara(
+              token
+            );
+
+          }
+        );
+
+    }
+
+
+    async function iniciarCamara(
+      token
+    ) {
+
+      const boton =
+        document.getElementById(
+          "botonCamara"
+        );
+
+
+      const resultado =
+        document.getElementById(
+          "resultadoEscaneo"
+        );
+
+
+      boton.disabled =
+        true;
+
 
       boton.textContent =
         "⏳ Preparando cámara...";
-
-      resultado.textContent =
-        "";
 
 
       try {
@@ -223,18 +413,26 @@
 
           },
 
-          async function(textoQR) {
+
+          async function(
+            textoQR
+          ) {
 
             await lector.stop();
 
-            procesarQR(textoQR);
+
+            procesarQR(
+              textoQR,
+              token
+            );
 
           },
+
 
           function() {
 
             // Errores normales
-            // durante la búsqueda.
+            // mientras busca QR.
 
           }
 
@@ -257,8 +455,10 @@
           ) +
           "</small>";
 
+
         boton.disabled =
           false;
+
 
         boton.textContent =
           "📷 Intentar de nuevo";
@@ -268,19 +468,28 @@
     }
 
 
-    function procesarQR(textoQR) {
+    function procesarQR(
+      textoQR,
+      token
+    ) {
 
-      resultado.textContent =
-        "⏳ Procesando boleto...";
+      const resultado =
+        document.getElementById(
+          "resultadoEscaneo"
+        );
 
 
-      let codigo = "";
+      let codigo =
+        "";
 
 
       try {
 
         const url =
-          new URL(textoQR);
+          new URL(
+            textoQR
+          );
+
 
         codigo =
           url.searchParams.get(
@@ -291,14 +500,8 @@
 
       catch(error) {
 
-        resultado.textContent =
-          "❌ El QR no contiene un boleto válido.";
-
-        boton.disabled =
-          false;
-
-        boton.textContent =
-          "📷 Escanear otro";
+        resultado.innerHTML =
+          "❌ QR no válido.";
 
         return;
 
@@ -307,14 +510,18 @@
 
       if (!codigo) {
 
-        resultado.textContent =
+        resultado.innerHTML =
           "❌ No se encontró el código del boleto.";
 
-        boton.disabled =
-          false;
+        return;
 
-        boton.textContent =
-          "📷 Escanear otro";
+      }
+
+
+      if (!token) {
+
+        resultado.innerHTML =
+          "❌ Sesión no autorizada.";
 
         return;
 
@@ -322,30 +529,36 @@
 
 
       resultado.innerHTML =
-        "🔎 Código detectado:<br><strong>" +
-        codigo +
-        "</strong><br><br>" +
-        "Consultando servidor...";
+        "⏳ Verificando boleto...";
 
 
       /*
-       * PRUEBA TEMPORAL
+       * Enviamos código + token
+       * a Apps Script.
        *
-       * Todavía no estamos consumiendo
-       * el boleto porque no tenemos token.
+       * Apps Script decide si:
+       *
+       * DISPONIBLE → USADO
+       * USADO → rechazar
+       * CANCELADO → rechazar
+       * sesión inválida → rechazar
        */
 
-      const urlPrueba =
+      const url =
         URL_APPS_SCRIPT +
         "?modo=resultadoEscaneo" +
         "&code=" +
         encodeURIComponent(
           codigo
+        ) +
+        "&token=" +
+        encodeURIComponent(
+          token
         );
 
 
       window.location.href =
-        urlPrueba;
+        url;
 
     }
 
