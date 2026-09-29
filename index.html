@@ -21,9 +21,7 @@
       padding: 20px;
       background: #111;
       color: #fff;
-      font-family:
-        Arial,
-        sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
     }
 
@@ -92,6 +90,37 @@
       color: #aaa;
     }
 
+    .resultado {
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 14px;
+      background: #111;
+      display: none;
+    }
+
+    .resultadoTitulo {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .resultadoInfo {
+      color: #ccc;
+      line-height: 1.6;
+    }
+
+    .verde {
+      color: #7CFF8A;
+    }
+
+    .rojo {
+      color: #ff7777;
+    }
+
+    .amarillo {
+      color: #ffd166;
+    }
+
   </style>
 
 </head>
@@ -142,9 +171,34 @@
         Preparando escáner...
       </div>
 
+      <div
+        id="resultado"
+        class="resultado"
+      >
+
+        <div
+          id="resultadoTitulo"
+          class="resultadoTitulo"
+        ></div>
+
+        <div
+          id="resultadoInfo"
+          class="resultadoInfo"
+        ></div>
+
+        <button
+          id="botonOtro"
+          type="button"
+        >
+          📷 Escanear otro boleto
+        </button>
+
+      </div>
+
     </div>
 
   </div>
+
 
   <script>
 
@@ -182,6 +236,30 @@
       );
 
 
+    const resultado =
+      document.getElementById(
+        "resultado"
+      );
+
+
+    const resultadoTitulo =
+      document.getElementById(
+        "resultadoTitulo"
+      );
+
+
+    const resultadoInfo =
+      document.getElementById(
+        "resultadoInfo"
+      );
+
+
+    const botonOtro =
+      document.getElementById(
+        "botonOtro"
+      );
+
+
     const contexto =
       canvas.getContext(
         "2d"
@@ -190,11 +268,11 @@
 
     let token = "";
 
-    let escaneando = false;
-
     let stream = null;
 
-    let regresoDesdeResultado = false;
+    let escaneando = false;
+
+    let boletoEnProceso = false;
 
 
     function obtenerToken() {
@@ -248,29 +326,35 @@
       mensaje.textContent =
         "Pulsa el botón para abrir la cámara.";
 
-
-      /*
-       * Detectamos si la página fue abierta
-       * desde el botón "Escanear otro boleto".
-       */
-      if (
-        document.referrer &&
-        document.referrer.indexOf(
-          "script.google.com"
-        ) !== -1
-      ) {
-
-        regresoDesdeResultado =
-          true;
-
-      }
-
     }
 
 
     botonCamara.addEventListener(
       "click",
       iniciarCamara
+    );
+
+
+    botonOtro.addEventListener(
+      "click",
+      function() {
+
+        resultado.style.display =
+          "none";
+
+        mensaje.style.color =
+          "#aaa";
+
+        mensaje.textContent =
+          "Listo para escanear otro boleto.";
+
+        botonCamara.disabled =
+          false;
+
+        botonCamara.textContent =
+          "📷 Abrir cámara";
+
+      }
     );
 
 
@@ -281,27 +365,11 @@
 
 
       botonCamara.textContent =
-        "⏳ Preparando cámara...";
+        "⏳ Abriendo cámara...";
 
 
-      mensaje.textContent =
-        "Preparando cámara...";
-
-
-      /*
-       * Si venimos desde "Escanear otro boleto",
-       * esperamos un poco antes de pedir nuevamente
-       * acceso al dispositivo.
-       */
-      if (
-        regresoDesdeResultado
-      ) {
-
-        await esperar(
-          1200
-        );
-
-      }
+      mensaje.style.color =
+        "#aaa";
 
 
       mensaje.textContent =
@@ -310,10 +378,6 @@
 
       try {
 
-        /*
-         * Por seguridad, detenemos cualquier
-         * stream que todavía pudiera existir.
-         */
         detenerCamara();
 
 
@@ -343,7 +407,7 @@
           true;
 
 
-        regresoDesdeResultado =
+        boletoEnProceso =
           false;
 
 
@@ -357,6 +421,10 @@
 
         mensaje.textContent =
           "Apunta la cámara al código QR.";
+
+
+        resultado.style.display =
+          "none";
 
 
         cargarLectorQR();
@@ -392,24 +460,6 @@
         );
 
       }
-
-    }
-
-
-    function esperar(
-      milisegundos
-    ) {
-
-      return new Promise(
-        function(resolve) {
-
-          setTimeout(
-            resolve,
-            milisegundos
-          );
-
-        }
-      );
 
     }
 
@@ -604,12 +654,17 @@
     ) {
 
       if (
-        !escaneando
+        !escaneando ||
+        boletoEnProceso
       ) {
 
         return;
 
       }
+
+
+      boletoEnProceso =
+        true;
 
 
       escaneando =
@@ -667,46 +722,268 @@
       }
 
 
-      if (
-        !codigo
-      ) {
+      if (!codigo) {
 
-        mensaje.style.color =
-          "#ff7777";
-
-
-        mensaje.textContent =
-          "❌ No se encontró un código válido.";
-
-
-        botonCamara.disabled =
-          false;
-
-
-        botonCamara.textContent =
-          "📷 Abrir cámara";
-
+        mostrarError(
+          "❌ No se encontró un código válido."
+        );
 
         return;
 
       }
 
 
-      const urlResultado =
-        URL_APPS_SCRIPT +
-        "?modo=resultadoEscaneo" +
-        "&code=" +
-        encodeURIComponent(
-          codigo
-        ) +
-        "&token=" +
-        encodeURIComponent(
-          token
+      /*
+       * IMPORTANTE:
+       *
+       * Ya no navegamos a Apps Script.
+       *
+       * El resultado llegará a esta
+       * misma página mediante comunicación
+       * entre ventanas.
+       */
+
+      const ventana =
+        window.open(
+          URL_APPS_SCRIPT +
+          "?modo=resultadoEscaneo" +
+          "&code=" +
+          encodeURIComponent(
+            codigo
+          ) +
+          "&token=" +
+          encodeURIComponent(
+            token
+          ),
+          "resultadoBoleto"
         );
 
 
-      window.location.href =
-        urlResultado;
+      if (!ventana) {
+
+        mostrarError(
+          "❌ El navegador bloqueó la ventana de verificación."
+        );
+
+        boletoEnProceso =
+          false;
+
+      }
+
+    }
+
+
+    window.addEventListener(
+      "message",
+      function(event) {
+
+        /*
+         * Solo aceptamos mensajes
+         * provenientes de Apps Script.
+         */
+
+        if (
+          !event.origin ||
+          event.origin.indexOf(
+            "script.google.com"
+          ) === -1
+        ) {
+
+          return;
+
+        }
+
+
+        if (
+          !event.data ||
+          event.data.tipo !==
+          "RESULTADO_BOLETO"
+        ) {
+
+          return;
+
+        }
+
+
+        mostrarResultado(
+          event.data.resultado
+        );
+
+      }
+    );
+
+
+    function mostrarResultado(
+      datos
+    ) {
+
+      boletoEnProceso =
+        false;
+
+
+      if (!datos) {
+
+        mostrarError(
+          "❌ No se recibió respuesta del sistema."
+        );
+
+        return;
+
+      }
+
+
+      resultado.style.display =
+        "block";
+
+
+      if (
+        datos.resultado ===
+        "VALIDO"
+      ) {
+
+        resultadoTitulo.className =
+          "resultadoTitulo verde";
+
+        resultadoTitulo.textContent =
+          "🟢 ENTRADA VÁLIDA";
+
+
+        resultadoInfo.innerHTML =
+          "<strong>Acceso autorizado</strong><br><br>" +
+          "Folio: " +
+          (datos.folio || "Sin folio") +
+          "<br>" +
+          "Nombre: " +
+          (datos.nombre || "No registrado") +
+          "<br><br>" +
+          "Esta entrada acaba de ser registrada.";
+
+      }
+
+      else if (
+        datos.resultado ===
+        "USADO"
+      ) {
+
+        resultadoTitulo.className =
+          "resultadoTitulo rojo";
+
+        resultadoTitulo.textContent =
+          "🔴 YA UTILIZADA";
+
+
+        resultadoInfo.innerHTML =
+          "<strong>NO PERMITIR ACCESO</strong><br><br>" +
+          "Folio: " +
+          (datos.folio || "Sin folio") +
+          "<br>" +
+          "Nombre: " +
+          (datos.nombre || "No registrado") +
+          "<br><br>" +
+          "Esta entrada ya fue registrada anteriormente.";
+
+      }
+
+      else if (
+        datos.resultado ===
+        "CANCELADO"
+      ) {
+
+        resultadoTitulo.className =
+          "resultadoTitulo rojo";
+
+        resultadoTitulo.textContent =
+          "🚫 ENTRADA CANCELADA";
+
+
+        resultadoInfo.innerHTML =
+          datos.mensaje ||
+          "Este boleto fue cancelado.";
+
+      }
+
+      else if (
+        datos.resultado ===
+        "CERRADA"
+      ) {
+
+        resultadoTitulo.className =
+          "resultadoTitulo amarillo";
+
+        resultadoTitulo.textContent =
+          "🟡 ENTRADA AÚN NO ABIERTA";
+
+
+        resultadoInfo.innerHTML =
+          "Folio: " +
+          (datos.folio || "Sin folio") +
+          "<br>" +
+          "Nombre: " +
+          (datos.nombre || "No registrado") +
+          "<br><br>" +
+          (
+            datos.mensaje ||
+            "La entrada todavía no está abierta."
+          );
+
+      }
+
+      else {
+
+        resultadoTitulo.className =
+          "resultadoTitulo rojo";
+
+        resultadoTitulo.textContent =
+          "❌ ENTRADA NO VÁLIDA";
+
+
+        resultadoInfo.innerHTML =
+          datos.mensaje ||
+          "Boleto no encontrado.";
+
+      }
+
+
+      mensaje.textContent =
+        "Resultado de la verificación.";
+
+
+      botonCamara.disabled =
+        true;
+
+
+      botonCamara.textContent =
+        "📷 Cámara detenida";
+
+    }
+
+
+    function mostrarError(
+      texto
+    ) {
+
+      boletoEnProceso =
+        false;
+
+
+      resultado.style.display =
+        "block";
+
+
+      resultadoTitulo.className =
+        "resultadoTitulo rojo";
+
+
+      resultadoTitulo.textContent =
+        "⚠️ ERROR";
+
+
+      resultadoInfo.textContent =
+        texto;
+
+
+      mensaje.textContent =
+        "Puedes intentar nuevamente.";
 
     }
 
