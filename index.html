@@ -362,8 +362,146 @@
 
 
     async function iniciarCamara(
-      token
+  token
+) {
+
+  const boton =
+    document.getElementById(
+      "botonCamara"
+    );
+
+  const resultado =
+    document.getElementById(
+      "resultadoEscaneo"
+    );
+
+  boton.disabled = true;
+
+  boton.textContent =
+    "⏳ Preparando cámara...";
+
+  try {
+
+    await cargarLectorQR();
+
+    const camaras =
+      await Html5Qrcode.getCameras();
+
+    if (
+      !camaras ||
+      !camaras.length
     ) {
+
+      throw new Error(
+        "No se encontró ninguna cámara disponible."
+      );
+
+    }
+
+    let camaraSeleccionada =
+      camaras[camaras.length - 1];
+
+    for (
+      let i = 0;
+      i < camaras.length;
+      i++
+    ) {
+
+      const etiqueta =
+        String(
+          camaras[i].label || ""
+        ).toLowerCase();
+
+      if (
+        etiqueta.includes("back") ||
+        etiqueta.includes("rear") ||
+        etiqueta.includes("trasera") ||
+        etiqueta.includes("posterior")
+      ) {
+
+        camaraSeleccionada =
+          camaras[i];
+
+        break;
+
+      }
+
+    }
+
+    const lector =
+      new Html5Qrcode(
+        "lectorQR"
+      );
+
+    await lector.start(
+
+      camaraSeleccionada.id,
+
+      {
+        fps: 10,
+
+        qrbox: {
+          width: 250,
+          height: 250
+        }
+
+      },
+
+      async function(
+        textoQR
+      ) {
+
+        try {
+
+          await lector.stop();
+
+        } catch (error) {
+
+          // La cámara ya puede haberse detenido.
+
+        }
+
+        procesarQR(
+          textoQR,
+          token
+        );
+
+      },
+
+      function() {
+
+        // Errores normales
+        // mientras busca el QR.
+
+      }
+
+    );
+
+    boton.textContent =
+      "📷 Cámara activa";
+
+  }
+
+  catch(error) {
+
+    resultado.innerHTML =
+      "❌ No se pudo abrir la cámara.<br><br>" +
+      "<small>" +
+      (
+        error.message ||
+        error
+      ) +
+      "</small>";
+
+    boton.disabled =
+      false;
+
+    boton.textContent =
+      "📷 Intentar de nuevo";
+
+  }
+
+}
 
       const boton =
         document.getElementById(
