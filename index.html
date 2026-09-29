@@ -1,20 +1,12 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es"><head>  <meta charset="UTF-8"><meta
+name="viewport"
+content="width=device-width, initial-scale=1"
 
-<head>
-
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
+«»
 
   <title>
     Control de acceso | Después de la muerte
-  </title>
-
-  <style>
+  </title>  <style>
 
     * {
       box-sizing: border-box;
@@ -111,63 +103,51 @@
       line-height: 1.5;
     }
 
-  </style>
+  </style></head><body>  <div class="contenedor"><div class="titulo">
+  🔐 Control de acceso
+</div>
 
-</head>
-
-
-<body>
-
-  <div class="contenedor">
-
-    <div class="titulo">
-      🔐 Control de acceso
-    </div>
-
-    <div class="subtitulo">
-      Después de la muerte
-    </div>
+<div class="subtitulo">
+  Después de la muerte
+</div>
 
 
-    <div class="card" id="contenido">
+<div class="card" id="contenido">
 
-      <form
-        id="formularioAcceso"
-        method="POST"
-        action="https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec"
-      >
+  <form
+    id="formularioAcceso"
+    method="POST"
+    action="https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec"
+  >
 
-        <label for="codigoAcceso">
-          Código de acceso
-        </label>
+    <label for="codigoAcceso">
+      Código de acceso
+    </label>
 
-        <input
-          id="codigoAcceso"
-          name="codigo"
-          type="password"
-          autocomplete="off"
-          placeholder="Ingresa el código"
-          required
-        >
+    <input
+      id="codigoAcceso"
+      name="codigo"
+      type="password"
+      autocomplete="off"
+      placeholder="Ingresa el código"
+      required
+    >
 
-        <button
-          id="botonIngresar"
-          type="submit"
-        >
-          🔐 Ingresar
-        </button>
+    <button
+      id="botonIngresar"
+      type="submit"
+    >
+      🔐 Ingresar
+    </button>
 
-      </form>
-
-
-      <div id="mensaje"></div>
-
-    </div>
-
-  </div>
+  </form>
 
 
-  <script>
+  <div id="mensaje"></div>
+
+</div>
+
+  </div>  <script>
 
     const URL_APPS_SCRIPT =
       "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
@@ -184,12 +164,6 @@
         "mensaje"
       );
 
-
-    /*
-     * Si Apps Script nos devuelve
-     * a esta página con #token=...
-     * guardamos el token en la sesión.
-     */
 
     function obtenerToken() {
 
@@ -232,16 +206,6 @@
 
     }
 
-
-    /*
-     * Inicio de sesión.
-     *
-     * El formulario se manda
-     * directamente a Apps Script.
-     *
-     * La contraseña nunca queda
-     * escrita en este archivo.
-     */
 
     formulario.addEventListener(
       "submit",
@@ -362,127 +326,8 @@
 
 
     async function iniciarCamara(
-  token
-) {
-
-  const boton =
-    document.getElementById(
-      "botonCamara"
-    );
-
-  const resultado =
-    document.getElementById(
-      "resultadoEscaneo"
-    );
-
-  boton.disabled = true;
-
-  boton.textContent =
-    "⏳ Preparando cámara...";
-
-  try {
-
-    await cargarLectorQR();
-
-if (
-  !navigator.mediaDevices ||
-  !navigator.mediaDevices.getUserMedia
-) {
-  throw new Error(
-    "Este navegador no permite acceder a la cámara desde esta página."
-  );
-}
-
-const permisoCamara =
-  await navigator.mediaDevices.getUserMedia({
-    video: true
-  });
-
-permisoCamara
-  .getTracks()
-  .forEach(function(track) {
-    track.stop();
-  });
-
-const lector =
-  new Html5Qrcode(
-    "lectorQR"
-  );
-
-await lector.start(
-
-  {
-    facingMode:
-      {
-        ideal: "environment"
-      }
-  },
-
-  {
-    fps: 10,
-
-    qrbox: {
-      width: 250,
-      height: 250
-    }
-
-  },
-
-  async function(
-    textoQR
-  ) {
-
-    try {
-
-      await lector.stop();
-
-    } catch (error) {
-
-      // La cámara ya puede haberse detenido.
-
-    }
-
-    procesarQR(
-      textoQR,
       token
-    );
-
-  },
-
-  function() {
-
-    // Errores normales
-    // mientras busca el QR.
-
-  }
-
-);
-
-boton.textContent =
-  "📷 Cámara activa";
-
-  }
-
-  catch(error) {
-
-    resultado.innerHTML =
-      "❌ No se pudo abrir la cámara.<br><br>" +
-      "<small>" +
-      (
-        error.message ||
-        error
-      ) +
-      "</small>";
-
-    boton.disabled =
-      false;
-
-    boton.textContent =
-      "📷 Intentar de nuevo";
-
-  }
-
-}
+    ) {
 
       const boton =
         document.getElementById(
@@ -518,10 +363,8 @@ boton.textContent =
         await lector.start(
 
           {
-           facingMode:
-  {
-    ideal: "environment"
-  }
+            facingMode:
+              "environment"
           },
 
           {
@@ -653,18 +496,6 @@ boton.textContent =
         "⏳ Verificando boleto...";
 
 
-      /*
-       * Enviamos código + token
-       * a Apps Script.
-       *
-       * Apps Script decide si:
-       *
-       * DISPONIBLE → USADO
-       * USADO → rechazar
-       * CANCELADO → rechazar
-       * sesión inválida → rechazar
-       */
-
       const url =
         URL_APPS_SCRIPT +
         "?modo=resultadoEscaneo" +
@@ -683,8 +514,4 @@ boton.textContent =
 
     }
 
-  </script>
-
-</body>
-
-</html>
+  </script></body></html>
