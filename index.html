@@ -63,6 +63,10 @@
       cursor: pointer;
     }
 
+    button:disabled {
+      opacity: 0.5;
+    }
+
     #lectorQR {
       width: 100%;
       margin-top: 20px;
@@ -71,13 +75,14 @@
     #resultado {
       margin-top: 16px;
       text-align: center;
-      color: #aaa;
       line-height: 1.5;
+      color: #aaa;
     }
 
   </style>
 
 </head>
+
 
 <body>
 
@@ -113,14 +118,24 @@
 
   <script>
 
+    const URL_APPS_SCRIPT =
+      "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
+
+
     const boton =
-      document.getElementById("botonCamara");
+      document.getElementById(
+        "botonCamara"
+      );
 
     const lectorQR =
-      document.getElementById("lectorQR");
+      document.getElementById(
+        "lectorQR"
+      );
 
     const resultado =
-      document.getElementById("resultado");
+      document.getElementById(
+        "resultado"
+      );
 
 
     boton.addEventListener(
@@ -131,36 +146,40 @@
 
     function cargarLectorQR() {
 
-      return new Promise(function(resolve, reject) {
+      return new Promise(
+        function(resolve, reject) {
 
-        if (
-          typeof Html5Qrcode !==
-          "undefined"
-        ) {
+          if (
+            typeof Html5Qrcode !==
+            "undefined"
+          ) {
 
-          resolve();
+            resolve();
 
-          return;
+            return;
+
+          }
+
+          const script =
+            document.createElement(
+              "script"
+            );
+
+          script.src =
+            "https://unpkg.com/html5-qrcode";
+
+          script.onload =
+            resolve;
+
+          script.onerror =
+            reject;
+
+          document.head.appendChild(
+            script
+          );
 
         }
-
-        const script =
-          document.createElement("script");
-
-        script.src =
-          "https://unpkg.com/html5-qrcode";
-
-        script.onload =
-          resolve;
-
-        script.onerror =
-          reject;
-
-        document.head.appendChild(
-          script
-        );
-
-      });
+      );
 
     }
 
@@ -204,22 +223,18 @@
 
           },
 
-          function(textoQR) {
+          async function(textoQR) {
 
-            lector.stop();
+            await lector.stop();
 
-            resultado.innerHTML =
-              "✅ QR detectado<br><br>" +
-              "<small>" +
-              textoQR +
-              "</small>";
+            procesarQR(textoQR);
 
           },
 
           function() {
 
-            // Ignoramos errores
-            // normales del escaneo.
+            // Errores normales
+            // durante la búsqueda.
 
           }
 
@@ -249,6 +264,88 @@
           "📷 Intentar de nuevo";
 
       }
+
+    }
+
+
+    function procesarQR(textoQR) {
+
+      resultado.textContent =
+        "⏳ Procesando boleto...";
+
+
+      let codigo = "";
+
+
+      try {
+
+        const url =
+          new URL(textoQR);
+
+        codigo =
+          url.searchParams.get(
+            "code"
+          );
+
+      }
+
+      catch(error) {
+
+        resultado.textContent =
+          "❌ El QR no contiene un boleto válido.";
+
+        boton.disabled =
+          false;
+
+        boton.textContent =
+          "📷 Escanear otro";
+
+        return;
+
+      }
+
+
+      if (!codigo) {
+
+        resultado.textContent =
+          "❌ No se encontró el código del boleto.";
+
+        boton.disabled =
+          false;
+
+        boton.textContent =
+          "📷 Escanear otro";
+
+        return;
+
+      }
+
+
+      resultado.innerHTML =
+        "🔎 Código detectado:<br><strong>" +
+        codigo +
+        "</strong><br><br>" +
+        "Consultando servidor...";
+
+
+      /*
+       * PRUEBA TEMPORAL
+       *
+       * Todavía no estamos consumiendo
+       * el boleto porque no tenemos token.
+       */
+
+      const urlPrueba =
+        URL_APPS_SCRIPT +
+        "?modo=resultadoEscaneo" +
+        "&code=" +
+        encodeURIComponent(
+          codigo
+        );
+
+
+      window.location.href =
+        urlPrueba;
 
     }
 
