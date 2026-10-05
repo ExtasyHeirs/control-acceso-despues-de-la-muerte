@@ -163,6 +163,12 @@
 
     }
 
+    #canvas {
+
+      display: none;
+
+    }
+
     .resultado {
 
       margin-top: 18px;
@@ -197,8 +203,7 @@
 
       <div id="estado">
 
-        📷 Esta es una prueba
-        directa de cámara.
+        📷 Preparando lector QR...
 
       </div>
 
@@ -206,7 +211,9 @@
         id="botonCamara"
         type="button"
       >
+
         📷 Abrir cámara
+
       </button>
 
       <div id="visor">
@@ -220,14 +227,21 @@
 
       </div>
 
+      <canvas id="canvas"></canvas>
+
       <div
         id="resultado"
         class="resultado"
-      ></div>
+      >
+
+        Apunta la cámara a un código QR.
+
+      </div>
 
     </div>
 
   </div>
+
 
   <script>
 
@@ -251,21 +265,103 @@
         "video"
       );
 
+    const canvas =
+      document.getElementById(
+        "canvas"
+      );
+
     const resultado =
       document.getElementById(
         "resultado"
       );
 
+
     let stream = null;
+
+    let escaneando = false;
+
+    let jsQRDisponible = false;
+
+
+    function cargarJSQR() {
+
+      return new Promise(
+        function(resolve, reject) {
+
+          if (window.jsQR) {
+
+            jsQRDisponible = true;
+
+            resolve();
+
+            return;
+
+          }
+
+
+          const script =
+            document.createElement(
+              "script"
+            );
+
+          script.src =
+            "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+
+
+          script.onload =
+            function() {
+
+              if (window.jsQR) {
+
+                jsQRDisponible = true;
+
+                resolve();
+
+              } else {
+
+                reject(
+                  new Error(
+                    "jsQR no está disponible."
+                  )
+                );
+
+              }
+
+            };
+
+
+          script.onerror =
+            function() {
+
+              reject(
+                new Error(
+                  "No se pudo cargar el lector QR."
+                )
+              );
+
+            };
+
+
+          document.head.appendChild(
+            script
+          );
+
+        }
+      );
+
+    }
+
 
     botonCamara.addEventListener(
       "click",
       async function() {
 
-        botonCamara.disabled = true;
+        botonCamara.disabled =
+          true;
 
         estado.innerHTML =
           "📷 Solicitando acceso a la cámara...";
+
 
         try {
 
@@ -279,6 +375,7 @@
 
           }
 
+
           if (
             !navigator.mediaDevices
           ) {
@@ -288,6 +385,7 @@
             );
 
           }
+
 
           if (
             !navigator.mediaDevices.getUserMedia
@@ -299,6 +397,13 @@
 
           }
 
+
+          /*
+           * IMPORTANTE:
+           * Primero abrimos la cámara directamente,
+           * igual que en la prueba que funcionó.
+           */
+
           stream =
             await navigator
               .mediaDevices
@@ -307,8 +412,10 @@
                 video: {
 
                   facingMode: {
+
                     ideal:
                       "environment"
+
                   }
 
                 },
@@ -317,19 +424,43 @@
 
               });
 
+
           video.srcObject =
             stream;
 
+
           await video.play();
+
 
           visor.style.display =
             "block";
 
+
           estado.innerHTML =
-            "✅ Cámara funcionando.";
+            "✅ Cámara funcionando.<br>" +
+            "Apunta al código QR del boleto.";
+
 
           resultado.innerHTML =
-            "La cámara del escáner funciona correctamente.";
+            "🔎 Buscando código QR...";
+
+
+          /*
+           * Después de abrir la cámara,
+           * cargamos el lector QR.
+           */
+
+          await cargarJSQR();
+
+
+          escaneando =
+            true;
+
+
+          requestAnimationFrame(
+            escanear
+          );
+
 
         } catch (error) {
 
@@ -337,15 +468,19 @@
             error
           );
 
+
           estado.innerHTML =
             "❌ No se pudo abrir la cámara.";
 
+
           resultado.innerHTML =
             "<b>" +
-            (error.name || "Error") +
+            (error.name ||
+              "Error") +
             "</b><br><br>" +
             (error.message ||
               "Sin detalles");
+
 
           botonCamara.disabled =
             false;
@@ -355,6 +490,217 @@
       }
 
     );
+
+
+    function escanear() {
+
+      if (!escaneando) {
+
+        return;
+
+      }
+
+
+      if (!jsQRDisponible) {
+
+        requestAnimationFrame(
+          escanear
+        );
+
+        return;
+
+      }
+
+
+      if (
+        video.readyState <
+        video.HAVE_ENOUGH_DATA
+      ) {
+
+        requestAnimationFrame(
+          escanear
+        );
+
+        return;
+
+      }
+
+
+      const ancho =
+        video.videoWidth;
+
+      const alto =
+        video.videoHeight;
+
+
+      if (
+        !ancho ||
+        !alto
+      ) {
+
+        requestAnimationFrame(
+          escanear
+        );
+
+        return;
+
+      }
+
+
+      canvas.width =
+        ancho;
+
+      canvas.height =
+        alto;
+
+
+      const contexto =
+        canvas.getContext(
+          "2d",
+          {
+            willReadFrequently:
+              true
+          }
+        );
+
+
+      contexto.drawImage(
+        video,
+        0,
+        0,
+        ancho,
+        alto
+      );
+
+
+      const imagen =
+        contexto.getImageData(
+          0,
+          0,
+          ancho,
+          alto
+        );
+
+
+      const codigoQR =
+        window.jsQR(
+          imagen.data,
+          imagen.width,
+          imagen.height,
+          {
+            inversionAttempts:
+              "attemptBoth"
+          }
+        );
+
+
+      if (
+        codigoQR &&
+        codigoQR.data
+      ) {
+
+        escaneando =
+          false;
+
+
+        detenerCamara();
+
+
+        mostrarQR(
+          codigoQR.data
+        );
+
+
+        return;
+
+      }
+
+
+      requestAnimationFrame(
+        escanear
+      );
+
+    }
+
+
+    function mostrarQR(
+      contenido
+    ) {
+
+      resultado.innerHTML =
+        "<b>✅ QR DETECTADO</b><br><br>" +
+        "<strong>Contenido leído:</strong><br><br>" +
+        escaparHTML(
+          contenido
+        );
+
+
+      estado.innerHTML =
+        "🎟️ Código QR leído correctamente.";
+
+    }
+
+
+    function detenerCamara() {
+
+      if (stream) {
+
+        stream
+          .getTracks()
+          .forEach(
+            function(track) {
+
+              track.stop();
+
+            }
+          );
+
+        stream =
+          null;
+
+      }
+
+
+      video.srcObject =
+        null;
+
+    }
+
+
+    function escaparHTML(
+      texto
+    ) {
+
+      return String(
+        texto || ""
+      )
+
+        .replace(
+          /&/g,
+          "&amp;"
+        )
+
+        .replace(
+          /</g,
+          "&lt;"
+        )
+
+        .replace(
+          />/g,
+          "&gt;"
+        )
+
+        .replace(
+          /"/g,
+          "&quot;"
+        )
+
+        .replace(
+          /'/g,
+          "&#039;"
+        );
+
+    }
 
   </script>
 
