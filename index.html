@@ -7,143 +7,271 @@
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1"
+    content="width=device-width, initial-scale=1.0"
   >
 
   <title>
-    Diagnóstico de cámara
+    Control de acceso
   </title>
 
   <style>
 
+    * {
+      box-sizing: border-box;
+    }
+
     body {
 
       margin: 0;
-      padding: 20px;
 
       min-height: 100vh;
-
-      box-sizing: border-box;
-
-      background: #111;
-
-      color: #fff;
 
       font-family:
         Arial,
         Helvetica,
         sans-serif;
 
-      text-align: center;
+      background:
+        #111;
+
+      color:
+        #fff;
+
+      display:
+        flex;
+
+      justify-content:
+        center;
+
+      align-items:
+        center;
+
+      padding:
+        20px;
 
     }
 
     .contenedor {
 
-      width: 100%;
-      max-width: 500px;
+      width:
+        100%;
 
-      margin: 40px auto;
+      max-width:
+        520px;
 
     }
 
     .tarjeta {
 
-      background: #1c1c1c;
+      background:
+        #1b1b1b;
 
-      border-radius: 18px;
+      border-radius:
+        18px;
 
-      padding: 25px;
+      padding:
+        24px;
 
-      box-sizing: border-box;
+      box-shadow:
+        0 10px 40px
+        rgba(0,0,0,.45);
+
+      text-align:
+        center;
 
     }
 
     h1 {
 
-      margin-top: 0;
+      margin:
+        0 0 6px;
 
-      font-size: 27px;
+      font-size:
+        24px;
 
     }
 
-    p {
+    .subtitulo {
 
-      color: #aaa;
+      color:
+        #aaa;
 
-      line-height: 1.5;
+      margin-bottom:
+        24px;
+
+      font-size:
+        14px;
+
+    }
+
+    #estado {
+
+      margin:
+        18px 0;
+
+      padding:
+        14px;
+
+      border-radius:
+        10px;
+
+      background:
+        #242424;
+
+      color:
+        #ddd;
+
+      font-size:
+        14px;
+
+      line-height:
+        1.5;
 
     }
 
     button {
 
-      width: 100%;
+      width:
+        100%;
 
-      padding: 16px;
+      border:
+        0;
 
-      margin-top: 20px;
+      border-radius:
+        12px;
 
-      border: 0;
+      padding:
+        15px;
 
-      border-radius: 12px;
+      font-size:
+        16px;
 
-      background: #fff;
+      font-weight:
+        bold;
 
-      color: #111;
+      cursor:
+        pointer;
 
-      font-size: 17px;
+      background:
+        #fff;
 
-      font-weight: bold;
+      color:
+        #111;
+
+      margin-top:
+        10px;
 
     }
 
     button:disabled {
 
-      opacity: .5;
+      opacity:
+        .5;
+
+      cursor:
+        not-allowed;
 
     }
 
-    video {
+    #visor {
 
-      display: none;
+      display:
+        none;
 
-      width: 100%;
+      width:
+        100%;
 
-      margin-top: 20px;
+      margin-top:
+        18px;
 
-      border-radius: 15px;
+      border-radius:
+        14px;
 
-      background: #000;
+      overflow:
+        hidden;
+
+      background:
+        #000;
 
     }
 
-    .estado {
+    #video {
 
-      margin-top: 20px;
+      display:
+        block;
 
-      padding: 15px;
+      width:
+        100%;
 
-      border-radius: 12px;
+      height:
+        auto;
 
-      background: #111;
+    }
 
-      color: #aaa;
+    #canvas {
 
-      line-height: 1.5;
+      display:
+        none;
 
-      word-break: break-word;
+    }
+
+    .oculto {
+
+      display:
+        none !important;
+
+    }
+
+    .resultado {
+
+      margin-top:
+        18px;
+
+      padding:
+        18px;
+
+      border-radius:
+        14px;
+
+      background:
+        #242424;
+
+      line-height:
+        1.6;
 
     }
 
     .verde {
 
-      color: #7CFF8A;
+      border:
+        2px solid #35d07f;
 
     }
 
     .rojo {
 
-      color: #ff7777;
+      border:
+        2px solid #e74c3c;
+
+    }
+
+    .amarillo {
+
+      border:
+        2px solid #f1c40f;
+
+    }
+
+    .folio {
+
+      font-size:
+        20px;
+
+      font-weight:
+        bold;
+
+      margin:
+        8px 0;
 
     }
 
@@ -159,36 +287,58 @@
     <div class="tarjeta">
 
       <h1>
-        📷 Diagnóstico de cámara
+        🎟️ Control de acceso
       </h1>
 
-      <p>
+      <div class="subtitulo">
         Después de la muerte
-      </p>
+      </div>
 
 
-      <div
-        id="estado"
-        class="estado"
-      >
-        Preparando diagnóstico...
+      <div id="estado">
+        🔐 Verificando sesión...
       </div>
 
 
       <button
-        id="boton"
+        id="botonCamara"
         type="button"
+        disabled
       >
-        📷 Probar cámara
+        📷 Abrir cámara
       </button>
 
 
-      <video
-        id="video"
-        autoplay
-        playsinline
-        muted
-      ></video>
+      <div id="visor">
+
+        <video
+          id="video"
+          autoplay
+          playsinline
+          muted
+        ></video>
+
+      </div>
+
+
+      <canvas
+        id="canvas"
+      ></canvas>
+
+
+      <div
+        id="resultado"
+        class="resultado oculto"
+      ></div>
+
+
+      <button
+        id="botonOtra"
+        type="button"
+        class="oculto"
+      >
+        🔄 Escanear otro boleto
+      </button>
 
     </div>
 
@@ -197,249 +347,1133 @@
 
   <script>
 
+    /*
+      ============================================================
+      CONFIGURACIÓN
+      ============================================================
+    */
+
+    const URL_APPS_SCRIPT =
+      "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
+
+
+    /*
+      ============================================================
+      ELEMENTOS
+      ============================================================
+    */
+
     const estado =
       document.getElementById(
         "estado"
       );
 
-
-    const boton =
+    const botonCamara =
       document.getElementById(
-        "boton"
+        "botonCamara"
       );
 
+    const botonOtra =
+      document.getElementById(
+        "botonOtra"
+      );
+
+    const visor =
+      document.getElementById(
+        "visor"
+      );
 
     const video =
       document.getElementById(
         "video"
       );
 
+    const canvas =
+      document.getElementById(
+        "canvas"
+      );
+
+    const resultado =
+      document.getElementById(
+        "resultado"
+      );
+
 
     /*
-      =====================================================
-      INFORMACIÓN DEL NAVEGADOR
-      =====================================================
+      ============================================================
+      VARIABLES
+      ============================================================
     */
 
-    function diagnosticoInicial() {
+    let token =
+      "";
 
-      const secure =
-        window.isSecureContext;
+    let stream =
+      null;
+
+    let escaneando =
+      false;
+
+    let procesando =
+      false;
+
+    let jsQRDisponible =
+      false;
 
 
-      const media =
-        !!(
-          navigator.mediaDevices
-        );
+    /*
+      ============================================================
+      OBTENER TOKEN
+      ============================================================
+    */
+
+    const parametros =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    token =
+      parametros.get(
+        "token"
+      ) || "";
 
 
-      estado.innerHTML =
+    /*
+      ============================================================
+      CARGAR jsQR
+      ============================================================
+    */
 
-        "🔎 Diagnóstico listo.<br><br>" +
+    function cargarJSQR() {
 
-        "HTTPS: " +
+      return new Promise(
+        function(resolve, reject) {
 
-        (
-          secure
-            ? "✅ Sí"
-            : "❌ No"
-        ) +
+          if (
+            window.jsQR
+          ) {
 
-        "<br>" +
+            jsQRDisponible =
+              true;
 
-        "mediaDevices: " +
+            resolve();
 
-        (
-          media
-            ? "✅ Disponible"
-            : "❌ No disponible"
-        ) +
+            return;
 
-        "<br><br>" +
+          }
 
-        "Pulsa <strong>Probar cámara</strong>.";
+
+          const script =
+            document.createElement(
+              "script"
+            );
+
+          script.src =
+            "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+
+          script.onload =
+            function() {
+
+              if (
+                window.jsQR
+              ) {
+
+                jsQRDisponible =
+                  true;
+
+                resolve();
+
+              } else {
+
+                reject(
+                  new Error(
+                    "jsQR no está disponible."
+                  )
+                );
+
+              }
+
+            };
+
+
+          script.onerror =
+            function() {
+
+              reject(
+                new Error(
+                  "No se pudo cargar el lector QR."
+                )
+              );
+
+            };
+
+
+          document.head.appendChild(
+            script
+          );
+
+        }
+      );
 
     }
 
 
     /*
-      =====================================================
-      PROBAR CÁMARA
-      =====================================================
+      ============================================================
+      SESIÓN
+      ============================================================
     */
 
-    async function probarCamara() {
+    function verificarSesion() {
 
-      boton.disabled =
-        true;
+      if (
+        !token
+      ) {
 
+        estado.innerHTML =
+          "❌ Sesión no autorizada.<br><br>" +
+          "Regresa al inicio e ingresa nuevamente.";
 
-      boton.textContent =
-        "⏳ Solicitando cámara...";
+        botonCamara.disabled =
+          true;
 
+        return;
 
-      estado.className =
-        "estado";
+      }
 
 
       estado.innerHTML =
-        "📷 Solicitando permiso de cámara...";
+        "✅ Sesión autorizada<br>" +
+        "Pulsa <b>Abrir cámara</b> para comenzar.";
+
+      botonCamara.disabled =
+        false;
+
+    }
+
+
+    /*
+      ============================================================
+      ABRIR CÁMARA
+      ============================================================
+    */
+
+    async function abrirCamara() {
+
+      botonCamara.disabled =
+        true;
+
+      estado.innerHTML =
+        "📷 Solicitando acceso a la cámara...";
 
 
       try {
 
-        /*
-          Comprobación 1
-        */
+        await cargarJSQR();
+
 
         if (
-          !window.isSecureContext
-        ) {
-
-          throw new Error(
-            "La página no está ejecutándose en un contexto HTTPS seguro."
-          );
-
-        }
-
-
-        /*
-          Comprobación 2
-        */
-
-        if (
-          !navigator.mediaDevices
-        ) {
-
-          throw new Error(
-            "navigator.mediaDevices no está disponible en este navegador."
-          );
-
-        }
-
-
-        /*
-          Comprobación 3
-        */
-
-        if (
+          !navigator.mediaDevices ||
           !navigator.mediaDevices.getUserMedia
         ) {
 
           throw new Error(
-            "getUserMedia no está disponible en este navegador."
+            "Este navegador no permite acceder a la cámara desde esta página."
           );
 
         }
 
 
         /*
-          AQUÍ DEBE APARECER EL AVISO
-          NATIVO DE LA CÁMARA.
+          IMPORTANTE:
+          La solicitud de cámara ocurre directamente
+          después del clic del usuario.
         */
 
-        const stream =
-          await navigator
-            .mediaDevices
-            .getUserMedia({
+        stream =
+          await navigator.mediaDevices.getUserMedia({
 
-              video: true,
+            video: {
 
-              audio: false
+              facingMode: {
+                ideal:
+                  "environment"
+              }
 
-            });
+            },
 
+            audio:
+              false
 
-        /*
-          Si llegamos aquí,
-          la cámara funcionó.
-        */
+          });
+
 
         video.srcObject =
           stream;
 
 
-        video.style.display =
+        await video.play();
+
+
+        visor.style.display =
           "block";
 
 
-        estado.className =
-          "estado verde";
+        resultado.classList.add(
+          "oculto"
+        );
+
+
+        botonOtra.classList.add(
+          "oculto"
+        );
 
 
         estado.innerHTML =
-
-          "🟢 CÁMARA FUNCIONANDO<br><br>" +
-
-          "El navegador permitió correctamente " +
-
-          "el acceso a la cámara.<br><br>" +
-
-          "Ya podemos volver a montar el escáner.";
-
-        
-        boton.textContent =
-          "✅ Cámara funcionando";
+          "📷 Cámara activa<br>" +
+          "Apunta al código QR del boleto.";
 
 
-      }
+        escaneando =
+          true;
 
-      catch(error) {
+        procesando =
+          false;
+
+
+        requestAnimationFrame(
+          escanear
+        );
+
+      } catch (error) {
 
         console.error(
-          "DIAGNÓSTICO DE CÁMARA:",
           error
         );
 
 
-        estado.className =
-          "estado rojo";
-
-
         estado.innerHTML =
-
-          "🔴 FALLÓ LA CÁMARA<br><br>" +
-
-          "<strong>Nombre:</strong><br>" +
-
-          (
-            error.name ||
-            "Desconocido"
-          ) +
-
-          "<br><br>" +
-
-          "<strong>Mensaje:</strong><br>" +
-
-          (
-            error.message ||
-            "Sin mensaje"
-          );
+          "❌ No se pudo abrir la cámara.<br><br>" +
+          "<b>" +
+          (error.name || "Error") +
+          "</b><br>" +
+          (error.message || "Sin detalles");
 
 
-        boton.disabled =
+        botonCamara.disabled =
           false;
-
-
-        boton.textContent =
-          "📷 Probar cámara otra vez";
 
       }
 
     }
 
 
-    boton.addEventListener(
+    /*
+      ============================================================
+      ESCANEAR
+      ============================================================
+    */
+
+    function escanear() {
+
+      if (
+        !escaneando
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        !jsQRDisponible
+      ) {
+
+        requestAnimationFrame(
+          escanear
+        );
+
+        return;
+
+      }
+
+
+      if (
+        video.readyState <
+        video.HAVE_ENOUGH_DATA
+      ) {
+
+        requestAnimationFrame(
+          escanear
+        );
+
+        return;
+
+      }
+
+
+      const ancho =
+        video.videoWidth;
+
+      const alto =
+        video.videoHeight;
+
+
+      if (
+        !ancho ||
+        !alto
+      ) {
+
+        requestAnimationFrame(
+          escanear
+        );
+
+        return;
+
+      }
+
+
+      canvas.width =
+        ancho;
+
+      canvas.height =
+        alto;
+
+
+      const contexto =
+        canvas.getContext(
+          "2d",
+          {
+            willReadFrequently:
+              true
+          }
+        );
+
+
+      contexto.drawImage(
+        video,
+        0,
+        0,
+        ancho,
+        alto
+      );
+
+
+      const imagen =
+        contexto.getImageData(
+          0,
+          0,
+          ancho,
+          alto
+        );
+
+
+      const codigoQR =
+        window.jsQR(
+          imagen.data,
+          imagen.width,
+          imagen.height,
+          {
+            inversionAttempts:
+              "attemptBoth"
+          }
+        );
+
+
+      if (
+        codigoQR &&
+        codigoQR.data &&
+        !procesando
+      ) {
+
+        procesando =
+          true;
+
+        procesarQR(
+          codigoQR.data
+        );
+
+        return;
+
+      }
+
+
+      requestAnimationFrame(
+        escanear
+      );
+
+    }
+
+
+    /*
+      ============================================================
+      PROCESAR QR
+      ============================================================
+    */
+
+    async function procesarQR(
+      contenido
+    ) {
+
+      escaneando =
+        false;
+
+
+      detenerCamara();
+
+
+      estado.innerHTML =
+        "🔎 Código detectado.<br>" +
+        "Verificando boleto...";
+
+
+      const codigo =
+        extraerCodigo(
+          contenido
+        );
+
+
+      if (
+        !codigo
+      ) {
+
+        mostrarResultado(
+          "ERROR",
+          "❌ QR no válido",
+          "El código QR no contiene un boleto reconocible."
+        );
+
+        return;
+
+      }
+
+
+      await consultarBoleto(
+        codigo
+      );
+
+    }
+
+
+    /*
+      ============================================================
+      EXTRAER CÓDIGO
+      ============================================================
+    */
+
+    function extraerCodigo(
+      contenido
+    ) {
+
+      const texto =
+        String(
+          contenido || ""
+        ).trim();
+
+
+      /*
+        Si el QR contiene directamente
+        el código, por ejemplo DM-0001.
+      */
+
+      if (
+        /^DM-\d+$/i.test(
+          texto
+        )
+      ) {
+
+        return texto;
+
+      }
+
+
+      /*
+        Si contiene una URL con ?code=DM-0001
+      */
+
+      try {
+
+        const url =
+          new URL(
+            texto
+          );
+
+
+        const code =
+          url.searchParams.get(
+            "code"
+          );
+
+
+        if (
+          code
+        ) {
+
+          return code;
+
+        }
+
+      } catch (
+        error
+      ) {
+
+        // No era una URL.
+      }
+
+
+      /*
+        Último intento:
+        buscar DM-0000 dentro del texto.
+      */
+
+      const coincidencia =
+        texto.match(
+          /DM-\d+/i
+        );
+
+
+      if (
+        coincidencia
+      ) {
+
+        return coincidencia[0];
+
+      }
+
+
+      return "";
+
+    }
+
+
+    /*
+      ============================================================
+      CONSULTAR BOLETO
+      ============================================================
+    */
+
+    function consultarBoleto(
+      codigo
+    ) {
+
+      return new Promise(
+        function(resolve) {
+
+          const iframe =
+            document.createElement(
+              "iframe"
+            );
+
+
+          iframe.style.display =
+            "none";
+
+
+          const url =
+            URL_APPS_SCRIPT +
+            "?modo=resultadoEscaneo" +
+            "&code=" +
+            encodeURIComponent(
+              codigo
+            ) +
+            "&token=" +
+            encodeURIComponent(
+              token
+            );
+
+
+          iframe.src =
+            url;
+
+
+          document.body.appendChild(
+            iframe
+          );
+
+
+          const recibir =
+            function(evento) {
+
+              if (
+                evento.origin !==
+                  "https://script.google.com" &&
+                evento.origin !==
+                  "https://script.googleusercontent.com"
+              ) {
+
+                return;
+
+              }
+
+
+              if (
+                !evento.data ||
+                evento.data.tipo !==
+                  "RESULTADO_BOLETO"
+              ) {
+
+                return;
+
+              }
+
+
+              window.removeEventListener(
+                "message",
+                recibir
+              );
+
+
+              try {
+
+                document.body.removeChild(
+                  iframe
+                );
+
+              } catch (
+                error
+              ) {}
+
+
+              mostrarResultadoDatos(
+                evento.data.resultado
+              );
+
+
+              resolve();
+
+            };
+
+
+          window.addEventListener(
+            "message",
+            recibir
+          );
+
+
+          /*
+            Seguridad contra que la respuesta
+            nunca llegue.
+          */
+
+          setTimeout(
+            function() {
+
+              window.removeEventListener(
+                "message",
+                recibir
+              );
+
+
+              try {
+
+                document.body.removeChild(
+                  iframe
+                );
+
+              } catch (
+                error
+              ) {}
+
+
+              if (
+                procesando
+              ) {
+
+                mostrarResultado(
+                  "ERROR",
+                  "⚠️ No se recibió respuesta",
+                  "El servidor tardó demasiado en responder."
+                );
+
+              }
+
+
+              resolve();
+
+            },
+            15000
+          );
+
+        }
+      );
+
+    }
+
+
+    /*
+      ============================================================
+      MOSTRAR RESULTADO
+      ============================================================
+    */
+
+    function mostrarResultadoDatos(
+      datos
+    ) {
+
+      if (
+        !datos
+      ) {
+
+        mostrarResultado(
+          "ERROR",
+          "❌ Respuesta inválida",
+          "No se pudo interpretar la respuesta del servidor."
+        );
+
+        return;
+
+      }
+
+
+      const estadoBoleto =
+        String(
+          datos.resultado || ""
+        ).toUpperCase();
+
+
+      if (
+        estadoBoleto ===
+        "VALIDO"
+      ) {
+
+        mostrarResultado(
+          "VALIDO",
+          "🟢 ENTRADA VÁLIDA",
+          "Acceso autorizado",
+          datos
+        );
+
+        return;
+
+      }
+
+
+      if (
+        estadoBoleto ===
+        "USADO"
+      ) {
+
+        mostrarResultado(
+          "USADO",
+          "🔴 YA UTILIZADA",
+          "Este boleto ya fue utilizado.",
+          datos
+        );
+
+        return;
+
+      }
+
+
+      if (
+        estadoBoleto ===
+          "PENDIENTE" ||
+        estadoBoleto ===
+          "CERRADA"
+      ) {
+
+        mostrarResultado(
+          "PENDIENTE",
+          "🟡 ENTRADA AÚN NO ABIERTA",
+          "El acceso al evento todavía no está abierto.",
+          datos
+        );
+
+        return;
+
+      }
+
+
+      if (
+        estadoBoleto ===
+        "CANCELADO"
+      ) {
+
+        mostrarResultado(
+          "CANCELADO",
+          "🚫 ENTRADA CANCELADA",
+          "Este boleto fue cancelado.",
+          datos
+        );
+
+        return;
+
+      }
+
+
+      mostrarResultado(
+        "ERROR",
+        "❌ BOLETO NO VÁLIDO",
+        "No se pudo validar este boleto.",
+        datos
+      );
+
+    }
+
+
+    /*
+      ============================================================
+      RESULTADO VISUAL
+      ============================================================
+    */
+
+    function mostrarResultado(
+      tipo,
+      titulo,
+      mensaje,
+      datos
+    ) {
+
+      resultado.className =
+        "resultado";
+
+
+      if (
+        tipo ===
+        "VALIDO"
+      ) {
+
+        resultado.classList.add(
+          "verde"
+        );
+
+      }
+
+
+      if (
+        tipo ===
+          "USADO" ||
+        tipo ===
+          "CANCELADO" ||
+        tipo ===
+          "ERROR"
+      ) {
+
+        resultado.classList.add(
+          "rojo"
+        );
+
+      }
+
+
+      if (
+        tipo ===
+        "PENDIENTE"
+      ) {
+
+        resultado.classList.add(
+          "amarillo"
+        );
+
+      }
+
+
+      let html =
+        "<div><b>" +
+        titulo +
+        "</b></div>" +
+        "<div>" +
+        mensaje +
+        "</div>";
+
+
+      if (
+        datos
+      ) {
+
+        if (
+          datos.folio
+        ) {
+
+          html +=
+            '<div class="folio">' +
+            "Folio: " +
+            escaparHTML(
+              datos.folio
+            ) +
+            "</div>";
+
+        }
+
+
+        if (
+          datos.nombre
+        ) {
+
+          html +=
+            "<div>" +
+            "Nombre: " +
+            escaparHTML(
+              datos.nombre
+            ) +
+            "</div>";
+
+        }
+
+      }
+
+
+      resultado.innerHTML =
+        html;
+
+
+      resultado.classList.remove(
+        "oculto"
+      );
+
+
+      botonCamara.classList.add(
+        "oculto"
+      );
+
+
+      botonOtra.classList.remove(
+        "oculto"
+      );
+
+
+      estado.innerHTML =
+        "Resultado de la validación.";
+
+    }
+
+
+    /*
+      ============================================================
+      DETENER CÁMARA
+      ============================================================
+    */
+
+    function detenerCamara() {
+
+      if (
+        stream
+      ) {
+
+        stream
+          .getTracks()
+          .forEach(
+            function(track) {
+
+              track.stop();
+
+            }
+          );
+
+        stream =
+          null;
+
+      }
+
+
+      video.srcObject =
+        null;
+
+    }
+
+
+    /*
+      ============================================================
+      ESCANEAR OTRO
+      ============================================================
+    */
+
+    function escanearOtro() {
+
+      resultado.classList.add(
+        "oculto"
+      );
+
+
+      botonOtra.classList.add(
+        "oculto"
+      );
+
+
+      botonCamara.classList.remove(
+        "oculto"
+      );
+
+
+      botonCamara.disabled =
+        false;
+
+
+      estado.innerHTML =
+        "Pulsa <b>Abrir cámara</b> para escanear otro boleto.";
+
+
+      procesando =
+        false;
+
+    }
+
+
+    /*
+      ============================================================
+      ESCAPAR HTML
+      ============================================================
+    */
+
+    function escaparHTML(
+      texto
+    ) {
+
+      return String(
+        texto || ""
+      )
+        .replace(
+          /&/g,
+          "&amp;"
+        )
+        .replace(
+          /</g,
+          "&lt;"
+        )
+        .replace(
+          />/g,
+          "&gt;"
+        )
+        .replace(
+          /"/g,
+          "&quot;"
+        )
+        .replace(
+          /'/g,
+          "&#039;"
+        );
+
+    }
+
+
+    /*
+      ============================================================
+      EVENTOS
+      ============================================================
+    */
+
+    botonCamara.addEventListener(
       "click",
-      probarCamara
+      abrirCamara
     );
 
 
-    diagnosticoInicial();
+    botonOtra.addEventListener(
+      "click",
+      escanearOtro
+    );
+
+
+    /*
+      ============================================================
+      INICIO
+      ============================================================
+    */
+
+    verificarSesion();
 
   </script>
 
 </body>
 
 </html>
-
