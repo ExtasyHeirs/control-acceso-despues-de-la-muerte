@@ -31,254 +31,155 @@
         Helvetica,
         sans-serif;
 
-      background:
-        #111;
+      background: #111;
 
-      color:
-        #fff;
+      color: #fff;
 
-      display:
-        flex;
+      display: flex;
 
-      justify-content:
-        center;
+      justify-content: center;
 
-      align-items:
-        center;
+      align-items: center;
 
-      padding:
-        20px;
+      padding: 20px;
 
     }
 
     .contenedor {
 
-      width:
-        100%;
+      width: 100%;
 
-      max-width:
-        520px;
+      max-width: 520px;
 
     }
 
     .tarjeta {
 
-      background:
-        #1b1b1b;
+      background: #1b1b1b;
 
-      border-radius:
-        18px;
+      border-radius: 18px;
 
-      padding:
-        24px;
+      padding: 24px;
 
       box-shadow:
         0 10px 40px
         rgba(0,0,0,.45);
 
-      text-align:
-        center;
+      text-align: center;
 
     }
 
     h1 {
 
-      margin:
-        0 0 6px;
+      margin: 0 0 6px;
 
-      font-size:
-        24px;
+      font-size: 24px;
 
     }
 
     .subtitulo {
 
-      color:
-        #aaa;
+      color: #aaa;
 
-      margin-bottom:
-        24px;
+      margin-bottom: 24px;
 
-      font-size:
-        14px;
+      font-size: 14px;
 
     }
 
     #estado {
 
-      margin:
-        18px 0;
+      margin: 18px 0;
 
-      padding:
-        14px;
+      padding: 14px;
 
-      border-radius:
-        10px;
+      border-radius: 10px;
 
-      background:
-        #242424;
+      background: #242424;
 
-      color:
-        #ddd;
+      color: #ddd;
 
-      font-size:
-        14px;
+      font-size: 14px;
 
-      line-height:
-        1.5;
+      line-height: 1.5;
 
     }
 
     button {
 
-      width:
-        100%;
+      width: 100%;
 
-      border:
-        0;
+      border: 0;
 
-      border-radius:
-        12px;
+      border-radius: 12px;
 
-      padding:
-        15px;
+      padding: 15px;
 
-      font-size:
-        16px;
+      font-size: 16px;
 
-      font-weight:
-        bold;
+      font-weight: bold;
 
-      cursor:
-        pointer;
+      cursor: pointer;
 
-      background:
-        #fff;
+      background: #fff;
 
-      color:
-        #111;
+      color: #111;
 
-      margin-top:
-        10px;
+      margin-top: 10px;
 
     }
 
     button:disabled {
 
-      opacity:
-        .5;
+      opacity: .5;
 
-      cursor:
-        not-allowed;
+      cursor: not-allowed;
 
     }
 
     #visor {
 
-      display:
-        none;
+      display: none;
 
-      width:
-        100%;
+      width: 100%;
 
-      margin-top:
-        18px;
+      margin-top: 18px;
 
-      border-radius:
-        14px;
+      border-radius: 14px;
 
-      overflow:
-        hidden;
+      overflow: hidden;
 
-      background:
-        #000;
+      background: #000;
 
     }
 
     #video {
 
-      display:
-        block;
+      display: block;
 
-      width:
-        100%;
+      width: 100%;
 
-      height:
-        auto;
-
-    }
-
-    #canvas {
-
-      display:
-        none;
-
-    }
-
-    .oculto {
-
-      display:
-        none !important;
+      height: auto;
 
     }
 
     .resultado {
 
-      margin-top:
-        18px;
+      margin-top: 18px;
 
-      padding:
-        18px;
+      padding: 18px;
 
-      border-radius:
-        14px;
+      border-radius: 14px;
 
-      background:
-        #242424;
+      background: #242424;
 
-      line-height:
-        1.6;
-
-    }
-
-    .verde {
-
-      border:
-        2px solid #35d07f;
-
-    }
-
-    .rojo {
-
-      border:
-        2px solid #e74c3c;
-
-    }
-
-    .amarillo {
-
-      border:
-        2px solid #f1c40f;
-
-    }
-
-    .folio {
-
-      font-size:
-        20px;
-
-      font-weight:
-        bold;
-
-      margin:
-        8px 0;
+      line-height: 1.6;
 
     }
 
   </style>
 
 </head>
-
 
 <body>
 
@@ -294,20 +195,19 @@
         Después de la muerte
       </div>
 
-
       <div id="estado">
-        🔐 Verificando sesión...
-      </div>
 
+        📷 Esta es una prueba
+        directa de cámara.
+
+      </div>
 
       <button
         id="botonCamara"
         type="button"
-        disabled
       >
         📷 Abrir cámara
       </button>
-
 
       <div id="visor">
 
@@ -320,48 +220,16 @@
 
       </div>
 
-
-      <canvas
-        id="canvas"
-      ></canvas>
-
-
       <div
         id="resultado"
-        class="resultado oculto"
+        class="resultado"
       ></div>
-
-
-      <button
-        id="botonOtra"
-        type="button"
-        class="oculto"
-      >
-        🔄 Escanear otro boleto
-      </button>
 
     </div>
 
   </div>
 
-
   <script>
-
-    /*
-      ============================================================
-      CONFIGURACIÓN
-      ============================================================
-    */
-
-    const URL_APPS_SCRIPT =
-      "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
-
-
-    /*
-      ============================================================
-      ELEMENTOS
-      ============================================================
-    */
 
     const estado =
       document.getElementById(
@@ -371,11 +239,6 @@
     const botonCamara =
       document.getElementById(
         "botonCamara"
-      );
-
-    const botonOtra =
-      document.getElementById(
-        "botonOtra"
       );
 
     const visor =
@@ -388,1089 +251,110 @@
         "video"
       );
 
-    const canvas =
-      document.getElementById(
-        "canvas"
-      );
-
     const resultado =
       document.getElementById(
         "resultado"
       );
 
-
-    /*
-      ============================================================
-      VARIABLES
-      ============================================================
-    */
-
-    let token =
-      "";
-
-    let stream =
-      null;
-
-    let escaneando =
-      false;
-
-    let procesando =
-      false;
-
-    let jsQRDisponible =
-      false;
-
-
-    /*
-      ============================================================
-      OBTENER TOKEN
-      ============================================================
-    */
-
-    const parametros =
-      new URLSearchParams(
-        window.location.search
-      );
-
-    token =
-      parametros.get(
-        "token"
-      ) || "";
-
-
-    /*
-      ============================================================
-      CARGAR jsQR
-      ============================================================
-    */
-
-    function cargarJSQR() {
-
-      return new Promise(
-        function(resolve, reject) {
-
-          if (
-            window.jsQR
-          ) {
-
-            jsQRDisponible =
-              true;
-
-            resolve();
-
-            return;
-
-          }
-
-
-          const script =
-            document.createElement(
-              "script"
-            );
-
-          script.src =
-            "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
-
-          script.onload =
-            function() {
-
-              if (
-                window.jsQR
-              ) {
-
-                jsQRDisponible =
-                  true;
-
-                resolve();
-
-              } else {
-
-                reject(
-                  new Error(
-                    "jsQR no está disponible."
-                  )
-                );
-
-              }
-
-            };
-
-
-          script.onerror =
-            function() {
-
-              reject(
-                new Error(
-                  "No se pudo cargar el lector QR."
-                )
-              );
-
-            };
-
-
-          document.head.appendChild(
-            script
-          );
-
-        }
-      );
-
-    }
-
-
-    /*
-      ============================================================
-      SESIÓN
-      ============================================================
-    */
-
-    function verificarSesion() {
-
-      if (
-        !token
-      ) {
-
-        estado.innerHTML =
-          "❌ Sesión no autorizada.<br><br>" +
-          "Regresa al inicio e ingresa nuevamente.";
-
-        botonCamara.disabled =
-          true;
-
-        return;
-
-      }
-
-
-      estado.innerHTML =
-        "✅ Sesión autorizada<br>" +
-        "Pulsa <b>Abrir cámara</b> para comenzar.";
-
-      botonCamara.disabled =
-        false;
-
-    }
-
-
-    /*
-      ============================================================
-      ABRIR CÁMARA
-      ============================================================
-    */
-
-    async function abrirCamara() {
-
-      botonCamara.disabled =
-        true;
-
-      estado.innerHTML =
-        "📷 Solicitando acceso a la cámara...";
-
-
-      try {
-
-        await cargarJSQR();
-
-
-        if (
-          !navigator.mediaDevices ||
-          !navigator.mediaDevices.getUserMedia
-        ) {
-
-          throw new Error(
-            "Este navegador no permite acceder a la cámara desde esta página."
-          );
-
-        }
-
-
-        /*
-          IMPORTANTE:
-          La solicitud de cámara ocurre directamente
-          después del clic del usuario.
-        */
-
-        stream =
-          await navigator.mediaDevices.getUserMedia({
-
-            video: {
-
-              facingMode: {
-                ideal:
-                  "environment"
-              }
-
-            },
-
-            audio:
-              false
-
-          });
-
-
-        video.srcObject =
-          stream;
-
-
-        await video.play();
-
-
-        visor.style.display =
-          "block";
-
-
-        resultado.classList.add(
-          "oculto"
-        );
-
-
-        botonOtra.classList.add(
-          "oculto"
-        );
-
-
-        estado.innerHTML =
-          "📷 Cámara activa<br>" +
-          "Apunta al código QR del boleto.";
-
-
-        escaneando =
-          true;
-
-        procesando =
-          false;
-
-
-        requestAnimationFrame(
-          escanear
-        );
-
-      } catch (error) {
-
-        console.error(
-          error
-        );
-
-
-        estado.innerHTML =
-          "❌ No se pudo abrir la cámara.<br><br>" +
-          "<b>" +
-          (error.name || "Error") +
-          "</b><br>" +
-          (error.message || "Sin detalles");
-
-
-        botonCamara.disabled =
-          false;
-
-      }
-
-    }
-
-
-    /*
-      ============================================================
-      ESCANEAR
-      ============================================================
-    */
-
-    function escanear() {
-
-      if (
-        !escaneando
-      ) {
-
-        return;
-
-      }
-
-
-      if (
-        !jsQRDisponible
-      ) {
-
-        requestAnimationFrame(
-          escanear
-        );
-
-        return;
-
-      }
-
-
-      if (
-        video.readyState <
-        video.HAVE_ENOUGH_DATA
-      ) {
-
-        requestAnimationFrame(
-          escanear
-        );
-
-        return;
-
-      }
-
-
-      const ancho =
-        video.videoWidth;
-
-      const alto =
-        video.videoHeight;
-
-
-      if (
-        !ancho ||
-        !alto
-      ) {
-
-        requestAnimationFrame(
-          escanear
-        );
-
-        return;
-
-      }
-
-
-      canvas.width =
-        ancho;
-
-      canvas.height =
-        alto;
-
-
-      const contexto =
-        canvas.getContext(
-          "2d",
-          {
-            willReadFrequently:
-              true
-          }
-        );
-
-
-      contexto.drawImage(
-        video,
-        0,
-        0,
-        ancho,
-        alto
-      );
-
-
-      const imagen =
-        contexto.getImageData(
-          0,
-          0,
-          ancho,
-          alto
-        );
-
-
-      const codigoQR =
-        window.jsQR(
-          imagen.data,
-          imagen.width,
-          imagen.height,
-          {
-            inversionAttempts:
-              "attemptBoth"
-          }
-        );
-
-
-      if (
-        codigoQR &&
-        codigoQR.data &&
-        !procesando
-      ) {
-
-        procesando =
-          true;
-
-        procesarQR(
-          codigoQR.data
-        );
-
-        return;
-
-      }
-
-
-      requestAnimationFrame(
-        escanear
-      );
-
-    }
-
-
-    /*
-      ============================================================
-      PROCESAR QR
-      ============================================================
-    */
-
-    async function procesarQR(
-      contenido
-    ) {
-
-      escaneando =
-        false;
-
-
-      detenerCamara();
-
-
-      estado.innerHTML =
-        "🔎 Código detectado.<br>" +
-        "Verificando boleto...";
-
-
-      const codigo =
-        extraerCodigo(
-          contenido
-        );
-
-
-      if (
-        !codigo
-      ) {
-
-        mostrarResultado(
-          "ERROR",
-          "❌ QR no válido",
-          "El código QR no contiene un boleto reconocible."
-        );
-
-        return;
-
-      }
-
-
-      await consultarBoleto(
-        codigo
-      );
-
-    }
-
-
-    /*
-      ============================================================
-      EXTRAER CÓDIGO
-      ============================================================
-    */
-
-    function extraerCodigo(
-      contenido
-    ) {
-
-      const texto =
-        String(
-          contenido || ""
-        ).trim();
-
-
-      /*
-        Si el QR contiene directamente
-        el código, por ejemplo DM-0001.
-      */
-
-      if (
-        /^DM-\d+$/i.test(
-          texto
-        )
-      ) {
-
-        return texto;
-
-      }
-
-
-      /*
-        Si contiene una URL con ?code=DM-0001
-      */
-
-      try {
-
-        const url =
-          new URL(
-            texto
-          );
-
-
-        const code =
-          url.searchParams.get(
-            "code"
-          );
-
-
-        if (
-          code
-        ) {
-
-          return code;
-
-        }
-
-      } catch (
-        error
-      ) {
-
-        // No era una URL.
-      }
-
-
-      /*
-        Último intento:
-        buscar DM-0000 dentro del texto.
-      */
-
-      const coincidencia =
-        texto.match(
-          /DM-\d+/i
-        );
-
-
-      if (
-        coincidencia
-      ) {
-
-        return coincidencia[0];
-
-      }
-
-
-      return "";
-
-    }
-
-
-    /*
-      ============================================================
-      CONSULTAR BOLETO
-      ============================================================
-    */
-
-    function consultarBoleto(
-      codigo
-    ) {
-
-      return new Promise(
-        function(resolve) {
-
-          const iframe =
-            document.createElement(
-              "iframe"
-            );
-
-
-          iframe.style.display =
-            "none";
-
-
-          const url =
-            URL_APPS_SCRIPT +
-            "?modo=resultadoEscaneo" +
-            "&code=" +
-            encodeURIComponent(
-              codigo
-            ) +
-            "&token=" +
-            encodeURIComponent(
-              token
-            );
-
-
-          iframe.src =
-            url;
-
-
-          document.body.appendChild(
-            iframe
-          );
-
-
-          const recibir =
-            function(evento) {
-
-              if (
-                evento.origin !==
-                  "https://script.google.com" &&
-                evento.origin !==
-                  "https://script.googleusercontent.com"
-              ) {
-
-                return;
-
-              }
-
-
-              if (
-                !evento.data ||
-                evento.data.tipo !==
-                  "RESULTADO_BOLETO"
-              ) {
-
-                return;
-
-              }
-
-
-              window.removeEventListener(
-                "message",
-                recibir
-              );
-
-
-              try {
-
-                document.body.removeChild(
-                  iframe
-                );
-
-              } catch (
-                error
-              ) {}
-
-
-              mostrarResultadoDatos(
-                evento.data.resultado
-              );
-
-
-              resolve();
-
-            };
-
-
-          window.addEventListener(
-            "message",
-            recibir
-          );
-
-
-          /*
-            Seguridad contra que la respuesta
-            nunca llegue.
-          */
-
-          setTimeout(
-            function() {
-
-              window.removeEventListener(
-                "message",
-                recibir
-              );
-
-
-              try {
-
-                document.body.removeChild(
-                  iframe
-                );
-
-              } catch (
-                error
-              ) {}
-
-
-              if (
-                procesando
-              ) {
-
-                mostrarResultado(
-                  "ERROR",
-                  "⚠️ No se recibió respuesta",
-                  "El servidor tardó demasiado en responder."
-                );
-
-              }
-
-
-              resolve();
-
-            },
-            15000
-          );
-
-        }
-      );
-
-    }
-
-
-    /*
-      ============================================================
-      MOSTRAR RESULTADO
-      ============================================================
-    */
-
-    function mostrarResultadoDatos(
-      datos
-    ) {
-
-      if (
-        !datos
-      ) {
-
-        mostrarResultado(
-          "ERROR",
-          "❌ Respuesta inválida",
-          "No se pudo interpretar la respuesta del servidor."
-        );
-
-        return;
-
-      }
-
-
-      const estadoBoleto =
-        String(
-          datos.resultado || ""
-        ).toUpperCase();
-
-
-      if (
-        estadoBoleto ===
-        "VALIDO"
-      ) {
-
-        mostrarResultado(
-          "VALIDO",
-          "🟢 ENTRADA VÁLIDA",
-          "Acceso autorizado",
-          datos
-        );
-
-        return;
-
-      }
-
-
-      if (
-        estadoBoleto ===
-        "USADO"
-      ) {
-
-        mostrarResultado(
-          "USADO",
-          "🔴 YA UTILIZADA",
-          "Este boleto ya fue utilizado.",
-          datos
-        );
-
-        return;
-
-      }
-
-
-      if (
-        estadoBoleto ===
-          "PENDIENTE" ||
-        estadoBoleto ===
-          "CERRADA"
-      ) {
-
-        mostrarResultado(
-          "PENDIENTE",
-          "🟡 ENTRADA AÚN NO ABIERTA",
-          "El acceso al evento todavía no está abierto.",
-          datos
-        );
-
-        return;
-
-      }
-
-
-      if (
-        estadoBoleto ===
-        "CANCELADO"
-      ) {
-
-        mostrarResultado(
-          "CANCELADO",
-          "🚫 ENTRADA CANCELADA",
-          "Este boleto fue cancelado.",
-          datos
-        );
-
-        return;
-
-      }
-
-
-      mostrarResultado(
-        "ERROR",
-        "❌ BOLETO NO VÁLIDO",
-        "No se pudo validar este boleto.",
-        datos
-      );
-
-    }
-
-
-    /*
-      ============================================================
-      RESULTADO VISUAL
-      ============================================================
-    */
-
-    function mostrarResultado(
-      tipo,
-      titulo,
-      mensaje,
-      datos
-    ) {
-
-      resultado.className =
-        "resultado";
-
-
-      if (
-        tipo ===
-        "VALIDO"
-      ) {
-
-        resultado.classList.add(
-          "verde"
-        );
-
-      }
-
-
-      if (
-        tipo ===
-          "USADO" ||
-        tipo ===
-          "CANCELADO" ||
-        tipo ===
-          "ERROR"
-      ) {
-
-        resultado.classList.add(
-          "rojo"
-        );
-
-      }
-
-
-      if (
-        tipo ===
-        "PENDIENTE"
-      ) {
-
-        resultado.classList.add(
-          "amarillo"
-        );
-
-      }
-
-
-      let html =
-        "<div><b>" +
-        titulo +
-        "</b></div>" +
-        "<div>" +
-        mensaje +
-        "</div>";
-
-
-      if (
-        datos
-      ) {
-
-        if (
-          datos.folio
-        ) {
-
-          html +=
-            '<div class="folio">' +
-            "Folio: " +
-            escaparHTML(
-              datos.folio
-            ) +
-            "</div>";
-
-        }
-
-
-        if (
-          datos.nombre
-        ) {
-
-          html +=
-            "<div>" +
-            "Nombre: " +
-            escaparHTML(
-              datos.nombre
-            ) +
-            "</div>";
-
-        }
-
-      }
-
-
-      resultado.innerHTML =
-        html;
-
-
-      resultado.classList.remove(
-        "oculto"
-      );
-
-
-      botonCamara.classList.add(
-        "oculto"
-      );
-
-
-      botonOtra.classList.remove(
-        "oculto"
-      );
-
-
-      estado.innerHTML =
-        "Resultado de la validación.";
-
-    }
-
-
-    /*
-      ============================================================
-      DETENER CÁMARA
-      ============================================================
-    */
-
-    function detenerCamara() {
-
-      if (
-        stream
-      ) {
-
-        stream
-          .getTracks()
-          .forEach(
-            function(track) {
-
-              track.stop();
-
-            }
-          );
-
-        stream =
-          null;
-
-      }
-
-
-      video.srcObject =
-        null;
-
-    }
-
-
-    /*
-      ============================================================
-      ESCANEAR OTRO
-      ============================================================
-    */
-
-    function escanearOtro() {
-
-      resultado.classList.add(
-        "oculto"
-      );
-
-
-      botonOtra.classList.add(
-        "oculto"
-      );
-
-
-      botonCamara.classList.remove(
-        "oculto"
-      );
-
-
-      botonCamara.disabled =
-        false;
-
-
-      estado.innerHTML =
-        "Pulsa <b>Abrir cámara</b> para escanear otro boleto.";
-
-
-      procesando =
-        false;
-
-    }
-
-
-    /*
-      ============================================================
-      ESCAPAR HTML
-      ============================================================
-    */
-
-    function escaparHTML(
-      texto
-    ) {
-
-      return String(
-        texto || ""
-      )
-        .replace(
-          /&/g,
-          "&amp;"
-        )
-        .replace(
-          /</g,
-          "&lt;"
-        )
-        .replace(
-          />/g,
-          "&gt;"
-        )
-        .replace(
-          /"/g,
-          "&quot;"
-        )
-        .replace(
-          /'/g,
-          "&#039;"
-        );
-
-    }
-
-
-    /*
-      ============================================================
-      EVENTOS
-      ============================================================
-    */
+    let stream = null;
 
     botonCamara.addEventListener(
       "click",
-      abrirCamara
+      async function() {
+
+        botonCamara.disabled = true;
+
+        estado.innerHTML =
+          "📷 Solicitando acceso a la cámara...";
+
+        try {
+
+          if (
+            !window.isSecureContext
+          ) {
+
+            throw new Error(
+              "Esta página no está siendo considerada segura por el navegador."
+            );
+
+          }
+
+          if (
+            !navigator.mediaDevices
+          ) {
+
+            throw new Error(
+              "navigator.mediaDevices no está disponible."
+            );
+
+          }
+
+          if (
+            !navigator.mediaDevices.getUserMedia
+          ) {
+
+            throw new Error(
+              "getUserMedia no está disponible."
+            );
+
+          }
+
+          stream =
+            await navigator
+              .mediaDevices
+              .getUserMedia({
+
+                video: {
+
+                  facingMode: {
+                    ideal:
+                      "environment"
+                  }
+
+                },
+
+                audio: false
+
+              });
+
+          video.srcObject =
+            stream;
+
+          await video.play();
+
+          visor.style.display =
+            "block";
+
+          estado.innerHTML =
+            "✅ Cámara funcionando.";
+
+          resultado.innerHTML =
+            "La cámara del escáner funciona correctamente.";
+
+        } catch (error) {
+
+          console.error(
+            error
+          );
+
+          estado.innerHTML =
+            "❌ No se pudo abrir la cámara.";
+
+          resultado.innerHTML =
+            "<b>" +
+            (error.name || "Error") +
+            "</b><br><br>" +
+            (error.message ||
+              "Sin detalles");
+
+          botonCamara.disabled =
+            false;
+
+        }
+
+      }
+
     );
-
-
-    botonOtra.addEventListener(
-      "click",
-      escanearOtro
-    );
-
-
-    /*
-      ============================================================
-      INICIO
-      ============================================================
-    */
-
-    verificarSesion();
 
   </script>
 
