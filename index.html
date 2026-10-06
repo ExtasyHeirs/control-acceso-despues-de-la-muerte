@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -60,7 +61,15 @@
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 12px;
-      line-height: 1.4;
+      line-height: 1.5;
+    }
+
+    .estado.exito {
+      border: 1px solid #35d878;
+    }
+
+    .estado.error {
+      border: 1px solid #ff5555;
     }
 
     button {
@@ -87,7 +96,7 @@
     }
 
     .oculto {
-      display: none;
+      display: none !important;
     }
 
     #resultado {
@@ -95,6 +104,7 @@
     }
 
   </style>
+
 </head>
 
 <body>
@@ -123,6 +133,7 @@
 
     <button
       id="btnCamara"
+      type="button"
       onclick="cambiarCamara()"
       class="secundario"
     >
@@ -131,6 +142,7 @@
 
     <button
       id="btnReintentar"
+      type="button"
       onclick="iniciarCamara()"
       class="oculto"
     >
@@ -143,6 +155,7 @@
 
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
 
   <script>
 
@@ -199,6 +212,8 @@
 
     let codigoProcesado = false;
 
+    let validando = false;
+
 
     /*
      * VALIDAR SESIÓN
@@ -234,16 +249,21 @@
 
         codigoProcesado = false;
 
+        validando = false;
+
         resultadoDiv.innerHTML = "";
+
+        video.classList.remove("oculto");
+
+        btnCamara.classList.remove("oculto");
+
+        btnReintentar.classList.add("oculto");
+
+        estado.className = "estado";
 
         estado.innerHTML =
           "📷 Activando cámara...";
 
-
-        /*
-         * IMPORTANTE:
-         * environment = cámara trasera
-         */
 
         const restricciones = {
 
@@ -288,8 +308,6 @@
 
         escaneando = true;
 
-        btnReintentar.classList.add("oculto");
-
         escanear();
 
 
@@ -297,15 +315,21 @@
 
         console.error(error);
 
+        estado.className =
+          "estado error";
+
         estado.innerHTML =
-          "❌ No se pudo abrir la cámara.<br><br>" +
+          "❌ No se pudo abrir la cámara." +
+          "<br><br>" +
           "<small>" +
           error.name +
           "<br>" +
           error.message +
           "</small>";
 
-        btnReintentar.classList.remove("oculto");
+        btnReintentar.classList.remove(
+          "oculto"
+        );
 
       }
 
@@ -329,6 +353,9 @@
         camaraActual = "environment";
 
       }
+
+      estado.className =
+        "estado";
 
       estado.innerHTML =
         "🔄 Cambiando cámara...";
@@ -362,14 +389,15 @@
 
 
     /*
-     * ESCÁNER QR
+     * ESCANEAR QR
      */
 
     function escanear() {
 
       if (
         !escaneando ||
-        codigoProcesado
+        codigoProcesado ||
+        validando
       ) {
 
         return;
@@ -453,13 +481,20 @@
 
     function procesarQR(datos) {
 
-      if (codigoProcesado) {
+      if (
+        codigoProcesado ||
+        validando
+      ) {
+
         return;
+
       }
+
 
       codigoProcesado = true;
 
       escaneando = false;
+
 
       detenerCamara();
 
@@ -491,7 +526,7 @@
 
       /*
        * SI NO ERA UNA URL,
-       * USAMOS EL TEXTO DIRECTAMENTE
+       * BUSCAR FOLIO
        */
 
       if (!codigo) {
@@ -520,6 +555,9 @@
         codigo.trim();
 
 
+      estado.className =
+        "estado";
+
       estado.innerHTML =
         "🎟️ Código QR leído correctamente.";
 
@@ -533,151 +571,176 @@
      * VALIDAR BOLETO
      */
 
-   function validarBoleto(codigo) {
+    function validarBoleto(codigo) {
 
-  resultadoDiv.innerHTML =
-    "<div class='estado'>" +
-      "⏳ Validando boleto..." +
-    "</div>";
+      validando = true;
 
 
-  const iframe =
-    document.createElement("iframe");
+      resultadoDiv.innerHTML =
+        "<div class='estado'>" +
+          "⏳ Validando boleto..." +
+        "</div>";
 
 
-  iframe.style.display =
-    "none";
+      /*
+       * EL LISTENER SE CREA
+       * ANTES DE INSERTAR EL IFRAME.
+       */
+
+      let recibido = false;
+
+      let tiempoInicio =
+        Date.now();
 
 
-  iframe.src =
-    URL_APPS_SCRIPT +
-    "?modo=resultadoEscaneo" +
-    "&code=" +
-    encodeURIComponent(codigo) +
-    "&token=" +
-    encodeURIComponent(token);
+      const iframe =
+        document.createElement("iframe");
 
 
-  document.body.appendChild(
-    iframe
-  );
+      iframe.style.display =
+        "none";
 
-
-  let recibido = false;
-
-
-  function recibirResultado(event) {
-
-    /*
-     * Solo aceptamos mensajes
-     * enviados por nuestro iframe.
-     */
-
-    if (
-      event.source !==
-      iframe.contentWindow
-    ) {
-
-      return;
-
-    }
-
-
-    if (
-      !event.data ||
-      event.data.tipo !==
-      "RESULTADO_BOLETO"
-    ) {
-
-      return;
-
-    }
-
-
-    recibido = true;
-
-
-    window.removeEventListener(
-      "message",
-      recibirResultado
-    );
-
-
-    mostrarResultado(
-      event.data.resultado
-    );
-
-
-    /*
-     * Ya no necesitamos el iframe.
-     */
-
-    setTimeout(
-      function() {
-
-        if (
-          iframe &&
-          iframe.parentNode
-        ) {
-
-          iframe.parentNode.removeChild(
-            iframe
-          );
-
-        }
-
-      },
-      1000
-    );
-
-  }
-
-
-  window.addEventListener(
-    "message",
-    recibirResultado
-  );
-
-
-  setTimeout(
-    function() {
-
-      if (recibido) {
-
-        return;
-
-      }
-
-
-      window.removeEventListener(
-        "message",
-        recibirResultado
+      iframe.setAttribute(
+        "aria-hidden",
+        "true"
       );
 
 
-      if (
-        iframe &&
-        iframe.parentNode
-      ) {
+      function recibirResultado(event) {
 
-        iframe.parentNode.removeChild(
-          iframe
+        if (
+          !event.data ||
+          event.data.tipo !==
+          "RESULTADO_BOLETO"
+        ) {
+
+          return;
+
+        }
+
+
+        recibido = true;
+
+
+        window.removeEventListener(
+          "message",
+          recibirResultado
+        );
+
+
+        const resultado =
+          event.data.resultado;
+
+
+        mostrarResultado(
+          resultado
+        );
+
+
+        /*
+         * Eliminamos el iframe
+         * después de recibir respuesta.
+         */
+
+        setTimeout(
+          function() {
+
+            if (
+              iframe &&
+              iframe.parentNode
+            ) {
+
+              iframe.parentNode.removeChild(
+                iframe
+              );
+
+            }
+
+          },
+          500
         );
 
       }
 
 
-      resultadoDiv.innerHTML =
-        "<div class='estado'>" +
-          "⚠️ Error de comunicación<br>" +
-          "Apps Script no respondió a tiempo." +
-        "</div>";
+      window.addEventListener(
+        "message",
+        recibirResultado
+      );
 
-    },
-    10000
-  );
 
-}
+      /*
+       * URL DE VALIDACIÓN
+       */
+
+      iframe.src =
+        URL_APPS_SCRIPT +
+        "?modo=resultadoEscaneo" +
+        "&code=" +
+        encodeURIComponent(codigo) +
+        "&token=" +
+        encodeURIComponent(token);
+
+
+      document.body.appendChild(
+        iframe
+      );
+
+
+      /*
+       * TIEMPO MÁXIMO
+       */
+
+      setTimeout(
+        function() {
+
+          if (recibido) {
+
+            return;
+
+          }
+
+
+          window.removeEventListener(
+            "message",
+            recibirResultado
+          );
+
+
+          if (
+            iframe &&
+            iframe.parentNode
+          ) {
+
+            iframe.parentNode.removeChild(
+              iframe
+            );
+
+          }
+
+
+          validando = false;
+
+
+          resultadoDiv.innerHTML =
+            "<div class='estado error'>" +
+              "⚠️ Error de comunicación" +
+              "<br><br>" +
+              "Apps Script no respondió a tiempo." +
+            "</div>" +
+
+            "<button " +
+              "type='button' " +
+              "onclick='escanearOtroBoleto()'>" +
+              "🔄 Escanear otro boleto" +
+            "</button>";
+
+
+        },
+        15000
+      );
+
+    }
 
 
     /*
@@ -686,12 +749,21 @@
 
     function mostrarResultado(resultado) {
 
+      validando = false;
+
+
       if (!resultado) {
 
         resultadoDiv.innerHTML =
-          "<div class='estado'>" +
+          "<div class='estado error'>" +
             "❌ No se recibió respuesta." +
-          "</div>";
+          "</div>" +
+
+          "<button " +
+            "type='button' " +
+            "onclick='escanearOtroBoleto()'>" +
+            "🔄 Escanear otro boleto" +
+          "</button>";
 
         return;
 
@@ -703,11 +775,12 @@
       ) {
 
         resultadoDiv.innerHTML =
-          "<div class='estado'>" +
+          "<div class='estado exito'>" +
             "✅ ENTRADA VÁLIDA" +
             "<br><br>" +
             "Acceso autorizado." +
             "<br><br>" +
+
             "<strong>" +
               "Folio: " +
               (
@@ -715,29 +788,70 @@
                 "No registrado"
               ) +
             "</strong>" +
+
             "<br>" +
+
             "Nombre: " +
             (
               resultado.nombre ||
               "No registrado"
             ) +
-          "</div>";
 
-      } else {
+          "</div>" +
 
-        resultadoDiv.innerHTML =
-          "<div class='estado'>" +
-            "❌ ENTRADA NO VÁLIDA" +
-            "<br><br>" +
-            (
-              resultado.mensaje ||
-              "Boleto no válido."
-            ) +
-          "</div>";
+          "<button " +
+            "type='button' " +
+            "onclick='escanearOtroBoleto()'>" +
+            "🔄 Escanear otro boleto" +
+          "</button>";
+
+        return;
 
       }
 
+
+      resultadoDiv.innerHTML =
+        "<div class='estado error'>" +
+          "❌ ENTRADA NO VÁLIDA" +
+          "<br><br>" +
+          (
+            resultado.mensaje ||
+            "Boleto no válido."
+          ) +
+        "</div>" +
+
+        "<button " +
+          "type='button' " +
+          "onclick='escanearOtroBoleto()'>" +
+          "🔄 Escanear otro boleto" +
+        "</button>";
+
     }
+
+
+    /*
+     * ESCANEAR OTRO BOLETO
+     */
+
+    function escanearOtroBoleto() {
+
+      resultadoDiv.innerHTML = "";
+
+      codigoProcesado = false;
+
+      validando = false;
+
+      estado.className =
+        "estado";
+
+      estado.innerHTML =
+        "📷 Preparando cámara...";
+
+
+      iniciarCamara();
+
+    }
+
 
   </script>
 
