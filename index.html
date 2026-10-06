@@ -10,9 +10,7 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>
-    Control de acceso
-  </title>
+  <title>Control de acceso</title>
 
   <style>
 
@@ -21,166 +19,118 @@
     }
 
     body {
-
       margin: 0;
-
       min-height: 100vh;
-
       font-family:
         Arial,
         Helvetica,
         sans-serif;
-
       background: #111;
-
       color: #fff;
-
       display: flex;
-
       justify-content: center;
-
       align-items: center;
-
       padding: 20px;
-
     }
 
     .contenedor {
-
       width: 100%;
-
       max-width: 520px;
-
     }
 
     .tarjeta {
-
       background: #1b1b1b;
-
       border-radius: 18px;
-
       padding: 24px;
-
       box-shadow:
         0 10px 40px
         rgba(0,0,0,.45);
-
       text-align: center;
-
     }
 
     h1 {
-
       margin: 0 0 6px;
-
       font-size: 24px;
-
     }
 
     .subtitulo {
-
       color: #aaa;
-
       margin-bottom: 24px;
-
       font-size: 14px;
-
     }
 
     #estado {
-
       margin: 18px 0;
-
       padding: 14px;
-
       border-radius: 10px;
-
       background: #242424;
-
       color: #ddd;
-
       font-size: 14px;
-
       line-height: 1.5;
-
     }
 
     button {
-
       width: 100%;
-
       border: 0;
-
       border-radius: 12px;
-
       padding: 15px;
-
       font-size: 16px;
-
       font-weight: bold;
-
       cursor: pointer;
-
       background: #fff;
-
       color: #111;
-
       margin-top: 10px;
-
     }
 
     button:disabled {
-
       opacity: .5;
-
       cursor: not-allowed;
-
     }
 
     #visor {
-
       display: none;
-
       width: 100%;
-
       margin-top: 18px;
-
       border-radius: 14px;
-
       overflow: hidden;
-
       background: #000;
-
     }
 
     #video {
-
       display: block;
-
       width: 100%;
-
       height: auto;
-
     }
 
     #canvas {
-
       display: none;
-
     }
 
     .resultado {
-
       margin-top: 18px;
-
       padding: 18px;
-
       border-radius: 14px;
-
       background: #242424;
-
       line-height: 1.6;
+      word-break: break-word;
+    }
 
+    .verde {
+      border: 2px solid #35d07f;
+    }
+
+    .rojo {
+      border: 2px solid #e74c3c;
+    }
+
+    .amarillo {
+      border: 2px solid #f1c40f;
+    }
+
+    .folio {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 8px 0;
     }
 
   </style>
@@ -202,18 +152,14 @@
       </div>
 
       <div id="estado">
-
         📷 Preparando lector QR...
-
       </div>
 
       <button
         id="botonCamara"
         type="button"
       >
-
         📷 Abrir cámara
-
       </button>
 
       <div id="visor">
@@ -233,10 +179,16 @@
         id="resultado"
         class="resultado"
       >
-
         Apunta la cámara a un código QR.
-
       </div>
+
+      <button
+        id="botonOtra"
+        type="button"
+        style="display:none;"
+      >
+        🔄 Escanear otro boleto
+      </button>
 
     </div>
 
@@ -244,6 +196,10 @@
 
 
   <script>
+
+    const URL_APPS_SCRIPT =
+      "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
+
 
     const estado =
       document.getElementById(
@@ -253,6 +209,11 @@
     const botonCamara =
       document.getElementById(
         "botonCamara"
+      );
+
+    const botonOtra =
+      document.getElementById(
+        "botonOtra"
       );
 
     const visor =
@@ -280,6 +241,8 @@
 
     let escaneando = false;
 
+    let procesando = false;
+
     let jsQRDisponible = false;
 
 
@@ -303,6 +266,7 @@
             document.createElement(
               "script"
             );
+
 
           script.src =
             "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
@@ -354,142 +318,151 @@
 
     botonCamara.addEventListener(
       "click",
-      async function() {
-
-        botonCamara.disabled =
-          true;
-
-        estado.innerHTML =
-          "📷 Solicitando acceso a la cámara...";
+      abrirCamara
+    );
 
 
-        try {
-
-          if (
-            !window.isSecureContext
-          ) {
-
-            throw new Error(
-              "Esta página no está siendo considerada segura por el navegador."
-            );
-
-          }
+    botonOtra.addEventListener(
+      "click",
+      escanearOtro
+    );
 
 
-          if (
-            !navigator.mediaDevices
-          ) {
+    async function abrirCamara() {
 
-            throw new Error(
-              "navigator.mediaDevices no está disponible."
-            );
+      botonCamara.disabled =
+        true;
 
-          }
+      botonOtra.style.display =
+        "none";
 
-
-          if (
-            !navigator.mediaDevices.getUserMedia
-          ) {
-
-            throw new Error(
-              "getUserMedia no está disponible."
-            );
-
-          }
+      estado.innerHTML =
+        "📷 Solicitando acceso a la cámara...";
 
 
-          /*
-           * IMPORTANTE:
-           * Primero abrimos la cámara directamente,
-           * igual que en la prueba que funcionó.
-           */
+      try {
 
-          stream =
-            await navigator
-              .mediaDevices
-              .getUserMedia({
+        if (
+          !window.isSecureContext
+        ) {
 
-                video: {
-
-                  facingMode: {
-
-                    ideal:
-                      "environment"
-
-                  }
-
-                },
-
-                audio: false
-
-              });
-
-
-          video.srcObject =
-            stream;
-
-
-          await video.play();
-
-
-          visor.style.display =
-            "block";
-
-
-          estado.innerHTML =
-            "✅ Cámara funcionando.<br>" +
-            "Apunta al código QR del boleto.";
-
-
-          resultado.innerHTML =
-            "🔎 Buscando código QR...";
-
-
-          /*
-           * Después de abrir la cámara,
-           * cargamos el lector QR.
-           */
-
-          await cargarJSQR();
-
-
-          escaneando =
-            true;
-
-
-          requestAnimationFrame(
-            escanear
+          throw new Error(
+            "Esta página no está siendo considerada segura por el navegador."
           );
-
-
-        } catch (error) {
-
-          console.error(
-            error
-          );
-
-
-          estado.innerHTML =
-            "❌ No se pudo abrir la cámara.";
-
-
-          resultado.innerHTML =
-            "<b>" +
-            (error.name ||
-              "Error") +
-            "</b><br><br>" +
-            (error.message ||
-              "Sin detalles");
-
-
-          botonCamara.disabled =
-            false;
 
         }
 
+
+        if (
+          !navigator.mediaDevices
+        ) {
+
+          throw new Error(
+            "navigator.mediaDevices no está disponible."
+          );
+
+        }
+
+
+        if (
+          !navigator.mediaDevices.getUserMedia
+        ) {
+
+          throw new Error(
+            "getUserMedia no está disponible."
+          );
+
+        }
+
+
+        /*
+         * IMPORTANTE:
+         * La cámara se abre directamente,
+         * igual que en la prueba que funcionó.
+         */
+
+        stream =
+          await navigator
+            .mediaDevices
+            .getUserMedia({
+
+              video: {
+
+                facingMode: {
+
+                  ideal:
+                    "environment"
+
+                }
+
+              },
+
+              audio: false
+
+            });
+
+
+        video.srcObject =
+          stream;
+
+
+        await video.play();
+
+
+        visor.style.display =
+          "block";
+
+
+        estado.innerHTML =
+          "✅ Cámara funcionando.<br>" +
+          "Apunta al código QR del boleto.";
+
+
+        resultado.innerHTML =
+          "🔎 Buscando código QR...";
+
+
+        await cargarJSQR();
+
+
+        escaneando =
+          true;
+
+        procesando =
+          false;
+
+
+        requestAnimationFrame(
+          escanear
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+
+        estado.innerHTML =
+          "❌ No se pudo abrir la cámara.";
+
+
+        resultado.innerHTML =
+          "<b>" +
+          (error.name ||
+            "Error") +
+          "</b><br><br>" +
+          (error.message ||
+            "Sin detalles");
+
+
+        botonCamara.disabled =
+          false;
+
       }
 
-    );
+    }
 
 
     function escanear() {
@@ -596,8 +569,12 @@
 
       if (
         codigoQR &&
-        codigoQR.data
+        codigoQR.data &&
+        !procesando
       ) {
+
+        procesando =
+          true;
 
         escaneando =
           false;
@@ -606,7 +583,7 @@
         detenerCamara();
 
 
-        mostrarQR(
+        procesarQR(
           codigoQR.data
         );
 
@@ -623,20 +600,519 @@
     }
 
 
-    function mostrarQR(
+    async function procesarQR(
       contenido
     ) {
 
-      resultado.innerHTML =
-        "<b>✅ QR DETECTADO</b><br><br>" +
-        "<strong>Contenido leído:</strong><br><br>" +
-        escaparHTML(
+      estado.innerHTML =
+        "🔎 Código detectado.<br>" +
+        "Consultando Apps Script...";
+
+
+      const codigo =
+        extraerCodigo(
           contenido
         );
 
 
+      if (!codigo) {
+
+        mostrarResultado(
+          "ERROR",
+          "❌ QR no válido",
+          "No se encontró un código reconocible."
+        );
+
+        return;
+
+      }
+
+
+      resultado.innerHTML =
+        "<b>🎟️ Código detectado</b><br><br>" +
+        "<strong>Código:</strong><br>" +
+        escaparHTML(
+          codigo
+        ) +
+        "<br><br>" +
+        "Consultando servidor...";
+
+
+      try {
+
+        const datos =
+          await consultarBoleto(
+            codigo
+          );
+
+
+        mostrarResultadoDatos(
+          datos
+        );
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+
+        mostrarResultado(
+          "ERROR",
+          "⚠️ Error de comunicación",
+          error.message ||
+          "No se pudo consultar Apps Script."
+        );
+
+      }
+
+    }
+
+
+    function extraerCodigo(
+      contenido
+    ) {
+
+      const texto =
+        String(
+          contenido || ""
+        ).trim();
+
+
+      /*
+       * Si el QR contiene directamente
+       * un código tipo DM-0001.
+       */
+
+      if (
+        /^DM-\d+$/i.test(
+          texto
+        )
+      ) {
+
+        return texto;
+
+      }
+
+
+      /*
+       * Si contiene una URL de Apps Script
+       * con ?code=XXXXXXXXXXXX
+       */
+
+      try {
+
+        const url =
+          new URL(
+            texto
+          );
+
+
+        const code =
+          url.searchParams.get(
+            "code"
+          );
+
+
+        if (code) {
+
+          return code;
+
+        }
+
+      } catch (error) {
+
+        /*
+         * No pasa nada.
+         * Probamos con expresión regular.
+         */
+
+      }
+
+
+      /*
+       * Último intento:
+       * buscar cualquier parámetro code=.
+       */
+
+      const coincidencia =
+        texto.match(
+          /[?&]code=([^&]+)/i
+        );
+
+
+      if (
+        coincidencia &&
+        coincidencia[1]
+      ) {
+
+        return decodeURIComponent(
+          coincidencia[1]
+        );
+
+      }
+
+
+      return "";
+
+    }
+
+
+    function consultarBoleto(
+      codigo
+    ) {
+
+      return new Promise(
+        function(resolve, reject) {
+
+          const iframe =
+            document.createElement(
+              "iframe"
+            );
+
+
+          iframe.style.display =
+            "none";
+
+
+          const url =
+            URL_APPS_SCRIPT +
+            "?modo=resultadoEscaneo" +
+            "&code=" +
+            encodeURIComponent(
+              codigo
+            );
+
+
+          iframe.src =
+            url;
+
+
+          document.body.appendChild(
+            iframe
+          );
+
+
+          let terminado =
+            false;
+
+
+          function recibir(
+            evento
+          ) {
+
+            /*
+             * Apps Script puede responder
+             * desde cualquiera de estos dos
+             * dominios.
+             */
+
+            if (
+              evento.origin !==
+                "https://script.google.com" &&
+              evento.origin !==
+                "https://script.googleusercontent.com"
+            ) {
+
+              return;
+
+            }
+
+
+            if (
+              !evento.data ||
+              evento.data.tipo !==
+                "RESULTADO_BOLETO"
+            ) {
+
+              return;
+
+            }
+
+
+            terminado =
+              true;
+
+
+            window.removeEventListener(
+              "message",
+              recibir
+            );
+
+
+            try {
+
+              document.body.removeChild(
+                iframe
+              );
+
+            } catch (error) {}
+
+
+            resolve(
+              evento.data.resultado
+            );
+
+          }
+
+
+          window.addEventListener(
+            "message",
+            recibir
+          );
+
+
+          /*
+           * Si Apps Script no responde
+           * en 15 segundos, mostramos error.
+           */
+
+          setTimeout(
+            function() {
+
+              if (terminado) {
+
+                return;
+
+              }
+
+
+              window.removeEventListener(
+                "message",
+                recibir
+              );
+
+
+              try {
+
+                document.body.removeChild(
+                  iframe
+                );
+
+              } catch (error) {}
+
+
+              reject(
+                new Error(
+                  "Apps Script no respondió a tiempo."
+                )
+              );
+
+            },
+            15000
+          );
+
+        }
+      );
+
+    }
+
+
+    function mostrarResultadoDatos(
+      datos
+    ) {
+
+      if (!datos) {
+
+        mostrarResultado(
+          "ERROR",
+          "❌ Respuesta inválida",
+          "Apps Script no devolvió información del boleto."
+        );
+
+        return;
+
+      }
+
+
+      const estadoBoleto =
+        String(
+          datos.resultado || ""
+        ).toUpperCase();
+
+
+      if (
+        estadoBoleto ===
+        "VALIDO"
+      ) {
+
+        mostrarResultado(
+          "VALIDO",
+          "🟢 ENTRADA VÁLIDA",
+          "Acceso autorizado.",
+          datos
+        );
+
+        return;
+
+      }
+
+
+      if (
+        estadoBoleto ===
+        "USADO"
+      ) {
+
+        mostrarResultado(
+          "USADO",
+          "🔴 YA UTILIZADA",
+          "Este boleto ya fue utilizado.",
+          datos
+        );
+
+        return;
+
+      }
+
+
+      if (
+        estadoBoleto ===
+          "PENDIENTE" ||
+        estadoBoleto ===
+          "CERRADA"
+      ) {
+
+        mostrarResultado(
+          "PENDIENTE",
+          "🟡 ENTRADA AÚN NO ABIERTA",
+          "El acceso al evento todavía no está abierto.",
+          datos
+        );
+
+        return;
+
+      }
+
+
+      if (
+        estadoBoleto ===
+        "CANCELADO"
+      ) {
+
+        mostrarResultado(
+          "CANCELADO",
+          "🚫 ENTRADA CANCELADA",
+          "Este boleto fue cancelado.",
+          datos
+        );
+
+        return;
+
+      }
+
+
+      mostrarResultado(
+        "ERROR",
+        "❌ BOLETO NO VÁLIDO",
+        "Apps Script no reconoció este boleto.",
+        datos
+      );
+
+    }
+
+
+    function mostrarResultado(
+      tipo,
+      titulo,
+      mensaje,
+      datos
+    ) {
+
+      resultado.className =
+        "resultado";
+
+
+      if (
+        tipo ===
+        "VALIDO"
+      ) {
+
+        resultado.classList.add(
+          "verde"
+        );
+
+      }
+
+
+      if (
+        tipo === "USADO" ||
+        tipo === "CANCELADO" ||
+        tipo === "ERROR"
+      ) {
+
+        resultado.classList.add(
+          "rojo"
+        );
+
+      }
+
+
+      if (
+        tipo ===
+        "PENDIENTE"
+      ) {
+
+        resultado.classList.add(
+          "amarillo"
+        );
+
+      }
+
+
+      let html =
+        "<div><b>" +
+        titulo +
+        "</b></div>" +
+        "<div>" +
+        mensaje +
+        "</div>";
+
+
+      if (
+        datos &&
+        datos.folio
+      ) {
+
+        html +=
+          '<div class="folio">' +
+          "Folio: " +
+          escaparHTML(
+            datos.folio
+          ) +
+          "</div>";
+
+      }
+
+
+      if (
+        datos &&
+        datos.nombre
+      ) {
+
+        html +=
+          "<div>Nombre: " +
+          escaparHTML(
+            datos.nombre
+          ) +
+          "</div>";
+
+      }
+
+
+      resultado.innerHTML =
+        html;
+
+
+      botonCamara.style.display =
+        "none";
+
+
+      botonOtra.style.display =
+        "block";
+
+
       estado.innerHTML =
-        "🎟️ Código QR leído correctamente.";
+        "Resultado de la validación.";
 
     }
 
@@ -655,6 +1131,7 @@
             }
           );
 
+
         stream =
           null;
 
@@ -663,6 +1140,38 @@
 
       video.srcObject =
         null;
+
+    }
+
+
+    function escanearOtro() {
+
+      resultado.className =
+        "resultado";
+
+
+      resultado.innerHTML =
+        "Apunta la cámara a un código QR.";
+
+
+      botonOtra.style.display =
+        "none";
+
+
+      botonCamara.style.display =
+        "block";
+
+
+      botonCamara.disabled =
+        false;
+
+
+      estado.innerHTML =
+        "📷 Pulsa Abrir cámara para escanear otro boleto.";
+
+
+      procesando =
+        false;
 
     }
 
