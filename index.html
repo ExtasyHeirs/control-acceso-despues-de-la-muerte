@@ -582,15 +582,7 @@
         "</div>";
 
 
-      /*
-       * EL LISTENER SE CREA
-       * ANTES DE INSERTAR EL IFRAME.
-       */
-
       let recibido = false;
-
-      let tiempoInicio =
-        Date.now();
 
 
       const iframe =
@@ -605,6 +597,10 @@
         "true"
       );
 
+
+      /*
+       * RECIBIR RESPUESTA
+       */
 
       function recibirResultado(event) {
 
@@ -637,11 +633,6 @@
         );
 
 
-        /*
-         * Eliminamos el iframe
-         * después de recibir respuesta.
-         */
-
         setTimeout(
           function() {
 
@@ -662,6 +653,10 @@
 
       }
 
+
+      /*
+       * LISTENER ANTES DEL IFRAME
+       */
 
       window.addEventListener(
         "message",
@@ -724,15 +719,21 @@
 
           resultadoDiv.innerHTML =
             "<div class='estado error'>" +
+
               "⚠️ Error de comunicación" +
+
               "<br><br>" +
+
               "Apps Script no respondió a tiempo." +
+
             "</div>" +
 
             "<button " +
               "type='button' " +
               "onclick='escanearOtroBoleto()'>" +
+
               "🔄 Escanear otro boleto" +
+
             "</button>";
 
 
@@ -770,15 +771,31 @@
       }
 
 
+      /*
+       * IMPORTANTE:
+       *
+       * autorizarEntrada() devuelve:
+       *
+       * resultado: "VALIDO"
+       *
+       * No devuelve:
+       *
+       * autorizado: true
+       */
+
       if (
-        resultado.autorizado
+        resultado.resultado === "VALIDO"
       ) {
 
         resultadoDiv.innerHTML =
           "<div class='estado exito'>" +
+
             "✅ ENTRADA VÁLIDA" +
+
             "<br><br>" +
+
             "Acceso autorizado." +
+
             "<br><br>" +
 
             "<strong>" +
@@ -802,7 +819,9 @@
           "<button " +
             "type='button' " +
             "onclick='escanearOtroBoleto()'>" +
+
             "🔄 Escanear otro boleto" +
+
           "</button>";
 
         return;
@@ -810,20 +829,31 @@
       }
 
 
+      /*
+       * CUALQUIER OTRO RESULTADO
+       * SE CONSIDERA NO VÁLIDO.
+       */
+
       resultadoDiv.innerHTML =
         "<div class='estado error'>" +
+
           "❌ ENTRADA NO VÁLIDA" +
+
           "<br><br>" +
+
           (
             resultado.mensaje ||
             "Boleto no válido."
           ) +
+
         "</div>" +
 
         "<button " +
           "type='button' " +
           "onclick='escanearOtroBoleto()'>" +
+
           "🔄 Escanear otro boleto" +
+
         "</button>";
 
     }
