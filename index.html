@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -35,806 +34,670 @@
       text-align: center;
     }
 
-    .tarjeta {
-      background: #1c1c1c;
-      border-radius: 18px;
-      padding: 28px 20px;
-      box-shadow: 0 10px 35px rgba(0,0,0,.35);
-    }
-
     h1 {
       margin: 0 0 8px;
-      font-size: 24px;
+      font-size: 25px;
     }
 
-    .subtitulo {
+    .evento {
       color: #aaa;
-      margin-bottom: 25px;
-    }
-
-    button {
-      width: 100%;
-      border: 0;
-      border-radius: 12px;
-      padding: 15px;
-      margin-top: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    #botonCamara {
-      background: white;
-      color: black;
-    }
-
-    #botonOtro {
-      background: #333;
-      color: white;
+      margin-bottom: 20px;
     }
 
     #video {
       width: 100%;
-      max-height: 65vh;
+      max-width: 500px;
+      aspect-ratio: 1 / 1;
       object-fit: cover;
-      border-radius: 14px;
-      margin-top: 18px;
-      display: none;
-      background: black;
+      background: #000;
+      border-radius: 18px;
+      display: block;
+      margin: 0 auto 15px;
     }
 
-    #canvas {
-      display: none;
+    .estado {
+      background: #1c1c1c;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      line-height: 1.4;
     }
 
-    #estado {
-      margin-top: 18px;
-      line-height: 1.5;
+    button {
+      width: 100%;
+      max-width: 500px;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      background: white;
+      color: #111;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
     }
 
-    .exito {
-      color: #5cff8d;
+    button:active {
+      transform: scale(0.98);
     }
 
-    .error {
-      color: #ff6b6b;
-    }
-
-    .espera {
-      color: #ffd166;
-    }
-
-    .resultado {
-      margin-top: 20px;
-      padding: 18px;
-      border-radius: 14px;
+    .secundario {
       background: #292929;
-      line-height: 1.6;
+      color: white;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    #resultado {
+      margin-top: 15px;
     }
 
   </style>
-
 </head>
 
 <body>
 
-<div class="contenedor">
-
-  <div class="tarjeta">
+  <div class="contenedor">
 
     <h1>🎟️ Control de acceso</h1>
 
-    <div class="subtitulo">
+    <div class="evento">
       Después de la muerte
     </div>
-
-    <div id="estado">
-      🔐 Comprobando sesión...
-    </div>
-
-    <button
-      id="botonCamara"
-      style="display:none;"
-    >
-      📷 Abrir cámara
-    </button>
 
     <video
       id="video"
       autoplay
-      playsinline
       muted
+      playsinline
     ></video>
 
-    <canvas id="canvas"></canvas>
-
     <div
-      id="resultado"
-      class="resultado"
-      style="display:none;"
-    ></div>
+      id="estado"
+      class="estado"
+    >
+      📷 Preparando cámara...
+    </div>
 
     <button
-      id="botonOtro"
-      style="display:none;"
+      id="btnCamara"
+      onclick="cambiarCamara()"
+      class="secundario"
     >
-      🔄 Escanear otro boleto
+      🔄 Cambiar cámara
     </button>
+
+    <button
+      id="btnReintentar"
+      onclick="iniciarCamara()"
+      class="oculto"
+    >
+      📷 Activar cámara
+    </button>
+
+    <div id="resultado"></div>
 
   </div>
 
-</div>
 
-<script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
-const URL_APPS_SCRIPT =
-  "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
+  <script>
 
+    /*
+     * CONFIGURACIÓN
+     */
 
-const estado =
-  document.getElementById("estado");
-
-const botonCamara =
-  document.getElementById("botonCamara");
-
-const botonOtro =
-  document.getElementById("botonOtro");
-
-const video =
-  document.getElementById("video");
-
-const canvas =
-  document.getElementById("canvas");
-
-const ctx =
-  canvas.getContext("2d");
-
-const resultadoBox =
-  document.getElementById("resultado");
+    const URL_APPS_SCRIPT =
+      "https://script.google.com/macros/s/AKfycbyC7Z6SMYtjsQSHsCagLZLKQrSJ3ax_hlPHc-WUYuQy-7pt7CtC3s6ubrWqL9YEnQqjgg/exec";
 
 
-let token = "";
+    /*
+     * SESIÓN
+     */
 
-let stream = null;
+    const parametros =
+      new URLSearchParams(
+        window.location.search
+      );
 
-let escaneando = false;
-
-let jsQRDisponible = false;
-
-
-/*
-========================================
-OBTENER TOKEN
-========================================
-*/
-
-const parametros =
-  new URLSearchParams(
-    window.location.search
-  );
-
-token =
-  parametros.get("token") || "";
+    const token =
+      parametros.get("token");
 
 
-/*
-========================================
-SESION
-========================================
-*/
+    /*
+     * ELEMENTOS
+     */
 
-if (!token) {
+    const video =
+      document.getElementById("video");
 
-  estado.innerHTML =
-    "❌ Sesión no autorizada.<br><br>" +
-    "Regresa al inicio e ingresa nuevamente.";
+    const estado =
+      document.getElementById("estado");
 
-} else {
+    const btnCamara =
+      document.getElementById("btnCamara");
 
-  estado.innerHTML =
-    "✅ Sesión autorizada";
+    const btnReintentar =
+      document.getElementById("btnReintentar");
 
-  botonCamara.style.display =
-    "block";
-
-}
+    const resultadoDiv =
+      document.getElementById("resultado");
 
 
-/*
-========================================
-CARGAR JSQR
-========================================
-*/
+    /*
+     * VARIABLES
+     */
 
-function cargarJsQR() {
+    let streamActual = null;
 
-  return new Promise(
-    function(resolve, reject) {
+    let camaraActual = "environment";
+
+    let escaneando = false;
+
+    let codigoProcesado = false;
+
+
+    /*
+     * VALIDAR SESIÓN
+     */
+
+    if (!token) {
+
+      estado.innerHTML =
+        "❌ Sesión no autorizada.";
+
+      btnCamara.classList.add("oculto");
+
+      video.classList.add("oculto");
+
+    } else {
+
+      iniciarCamara();
+
+    }
+
+
+    /*
+     * INICIAR CÁMARA
+     */
+
+    async function iniciarCamara() {
+
+      try {
+
+        detenerCamara();
+
+        escaneando = false;
+
+        codigoProcesado = false;
+
+        resultadoDiv.innerHTML = "";
+
+        estado.innerHTML =
+          "📷 Activando cámara...";
+
+
+        /*
+         * IMPORTANTE:
+         * environment = cámara trasera
+         */
+
+        const restricciones = {
+
+          video: {
+
+            facingMode: {
+              ideal: camaraActual
+            },
+
+            width: {
+              ideal: 1280
+            },
+
+            height: {
+              ideal: 720
+            }
+
+          },
+
+          audio: false
+
+        };
+
+
+        streamActual =
+          await navigator.mediaDevices.getUserMedia(
+            restricciones
+          );
+
+
+        video.srcObject =
+          streamActual;
+
+
+        await video.play();
+
+
+        estado.innerHTML =
+          "📷 Cámara activa.<br>" +
+          "Apunta al código QR.";
+
+
+        escaneando = true;
+
+        btnReintentar.classList.add("oculto");
+
+        escanear();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        estado.innerHTML =
+          "❌ No se pudo abrir la cámara.<br><br>" +
+          "<small>" +
+          error.name +
+          "<br>" +
+          error.message +
+          "</small>";
+
+        btnReintentar.classList.remove("oculto");
+
+      }
+
+    }
+
+
+    /*
+     * CAMBIAR CÁMARA
+     */
+
+    async function cambiarCamara() {
 
       if (
-        typeof jsQR ===
-        "function"
+        camaraActual === "environment"
       ) {
 
-        jsQRDisponible = true;
+        camaraActual = "user";
 
-        resolve();
+      } else {
 
+        camaraActual = "environment";
+
+      }
+
+      estado.innerHTML =
+        "🔄 Cambiando cámara...";
+
+      await iniciarCamara();
+
+    }
+
+
+    /*
+     * DETENER CÁMARA
+     */
+
+    function detenerCamara() {
+
+      escaneando = false;
+
+      if (streamActual) {
+
+        streamActual
+          .getTracks()
+          .forEach(
+            track => track.stop()
+          );
+
+        streamActual = null;
+
+      }
+
+    }
+
+
+    /*
+     * ESCÁNER QR
+     */
+
+    function escanear() {
+
+      if (
+        !escaneando ||
+        codigoProcesado
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        video.readyState >= 2 &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0
+      ) {
+
+        const canvas =
+          document.createElement("canvas");
+
+        const contexto =
+          canvas.getContext("2d");
+
+
+        canvas.width =
+          video.videoWidth;
+
+        canvas.height =
+          video.videoHeight;
+
+
+        contexto.drawImage(
+          video,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+
+        const imagen =
+          contexto.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+
+        const codigoQR =
+          jsQR(
+            imagen.data,
+            imagen.width,
+            imagen.height,
+            {
+              inversionAttempts:
+                "dontInvert"
+            }
+          );
+
+
+        if (codigoQR) {
+
+          procesarQR(
+            codigoQR.data
+          );
+
+          return;
+
+        }
+
+      }
+
+
+      requestAnimationFrame(
+        escanear
+      );
+
+    }
+
+
+    /*
+     * PROCESAR QR
+     */
+
+    function procesarQR(datos) {
+
+      if (codigoProcesado) {
         return;
       }
 
-      const script =
-        document.createElement(
-          "script"
-        );
+      codigoProcesado = true;
 
-      script.src =
-        "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+      escaneando = false;
 
-      script.onload =
-        function() {
+      detenerCamara();
 
-          if (
-            typeof jsQR ===
-            "function"
-          ) {
 
-            jsQRDisponible = true;
+      let codigo = "";
 
-            resolve();
 
-          } else {
+      /*
+       * INTENTAR OBTENER CÓDIGO
+       * DESDE URL
+       */
 
-            reject(
-              new Error(
-                "jsQR no pudo cargarse."
-              )
-            );
+      try {
 
-          }
+        const url =
+          new URL(datos);
 
-        };
+        codigo =
+          url.searchParams.get("code") ||
+          url.searchParams.get("codigo") ||
+          "";
 
-      script.onerror =
-        function() {
+      } catch (error) {
 
-          reject(
-            new Error(
-              "No se pudo cargar jsQR."
-            )
+        codigo = "";
+
+      }
+
+
+      /*
+       * SI NO ERA UNA URL,
+       * USAMOS EL TEXTO DIRECTAMENTE
+       */
+
+      if (!codigo) {
+
+        const coincidencia =
+          String(datos).match(
+            /DM-\d{4,}/i
           );
 
-        };
+        if (coincidencia) {
 
-      document.head.appendChild(
-        script
-      );
+          codigo =
+            coincidencia[0];
+
+        } else {
+
+          codigo =
+            String(datos).trim();
+
+        }
+
+      }
+
+
+      codigo =
+        codigo.trim();
+
+
+      estado.innerHTML =
+        "🎟️ Código QR leído correctamente.";
+
+
+      validarBoleto(codigo);
 
     }
-  );
-
-}
 
 
-/*
-========================================
-ABRIR CAMARA
-========================================
-*/
+    /*
+     * VALIDAR BOLETO
+     */
 
-botonCamara.onclick =
-  async function() {
+    function validarBoleto(codigo) {
 
-    botonCamara.disabled =
-      true;
-
-    estado.innerHTML =
-      "📷 Solicitando acceso a la cámara...";
-
-    try {
-
-      /*
-       * IMPORTANTE:
-       * Primero usamos la solicitud
-       * más sencilla posible.
-       */
-
-      stream =
-        await navigator.mediaDevices
-          .getUserMedia({
-
-            video: true,
-
-            audio: false
-
-          });
+      resultadoDiv.innerHTML =
+        "<div class='estado'>" +
+          "⏳ Validando boleto..." +
+        "</div>";
 
 
-      /*
-       * La cámara YA fue autorizada.
-       * Ahora cargamos jsQR.
-       */
-
-      estado.innerHTML =
-        "📷 Cámara autorizada.<br>" +
-        "Cargando lector QR...";
+      const iframe =
+        document.createElement("iframe");
 
 
-      video.srcObject =
-        stream;
-
-      video.style.display =
-        "block";
-
-
-      await video.play();
-
-
-      await cargarJsQR();
-
-
-      estado.innerHTML =
-        "📷 Cámara activa.<br>" +
-        "Apunta al código QR.";
-
-
-      escaneando =
-        true;
-
-      botonCamara.style.display =
+      iframe.style.display =
         "none";
 
 
-      escanear();
+      iframe.src =
+        URL_APPS_SCRIPT +
+        "?modo=resultadoEscaneo" +
+        "&code=" +
+        encodeURIComponent(codigo) +
+        "&token=" +
+        encodeURIComponent(token);
 
 
-    } catch (error) {
-
-      console.error(
-        error
+      document.body.appendChild(
+        iframe
       );
 
-      estado.innerHTML =
-        "❌ No se pudo abrir la cámara." +
-        "<br><br>" +
-        "<strong>" +
-        error.name +
-        "</strong>" +
-        "<br>" +
-        (error.message || "") +
-        "<br><br>" +
-        "Permite el acceso a la cámara para este sitio.";
 
-      botonCamara.disabled =
-        false;
+      let recibido = false;
+
+
+      function recibirResultado(event) {
+
+        if (
+          event.origin !==
+          "https://extasyheirs.github.io"
+        ) {
+
+          return;
+
+        }
+
+
+        if (
+          !event.data ||
+          event.data.tipo !==
+          "RESULTADO_BOLETO"
+        ) {
+
+          return;
+
+        }
+
+
+        recibido = true;
+
+
+        window.removeEventListener(
+          "message",
+          recibirResultado
+        );
+
+
+        mostrarResultado(
+          event.data.resultado
+        );
+
+      }
+
+
+      window.addEventListener(
+        "message",
+        recibirResultado
+      );
+
+
+      setTimeout(
+        function() {
+
+          if (recibido) {
+            return;
+          }
+
+
+          window.removeEventListener(
+            "message",
+            recibirResultado
+          );
+
+
+          resultadoDiv.innerHTML =
+            "<div class='estado'>" +
+              "⚠️ Error de comunicación<br>" +
+              "Apps Script no respondió a tiempo." +
+            "</div>";
+
+        },
+        10000
+      );
 
     }
 
-  };
 
-
-/*
-========================================
-ESCANEAR
-========================================
-*/
-
-function escanear() {
-
-  if (
-    !escaneando ||
-    !jsQRDisponible
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    video.readyState <
-    video.HAVE_ENOUGH_DATA
-  ) {
-
-    requestAnimationFrame(
-      escanear
-    );
-
-    return;
-
-  }
-
-
-  canvas.width =
-    video.videoWidth;
-
-  canvas.height =
-    video.videoHeight;
-
-
-  ctx.drawImage(
-    video,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  const imagen =
-    ctx.getImageData(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-
-  const codigoQR =
-    jsQR(
-      imagen.data,
-      imagen.width,
-      imagen.height
-    );
-
-
-  if (codigoQR) {
-
-    escaneando =
-      false;
-
-    detenerCamara();
-
-    procesarQR(
-      codigoQR.data
-    );
-
-    return;
-
-  }
-
-
-  requestAnimationFrame(
-    escanear
-  );
-
-}
-
-
-/*
-========================================
-PROCESAR QR
-========================================
-*/
-
-function procesarQR(
-  contenido
-) {
-
-  let codigo =
-    "";
-
-
-  const coincidencia =
-    contenido.match(
-      /DM-\d{4,}/i
-    );
-
-
-  if (coincidencia) {
-
-    codigo =
-      coincidencia[0]
-        .toUpperCase();
-
-  }
-
-
-  if (!codigo) {
-
-    const url =
-      new URL(
-        contenido
-      );
-
-    codigo =
-      url.searchParams.get(
-        "code"
-      ) || "";
-
-  }
-
-
-  if (!codigo) {
-
-    mostrarResultado(
-      "❌ QR no reconocido.",
-      "error"
-    );
-
-    botonOtro.style.display =
-      "block";
-
-    return;
-
-  }
-
-
-  estado.innerHTML =
-    "🔄 Validando boleto...";
-
-
-  resultadoBox.style.display =
-    "none";
-
-
-  const iframe =
-    document.createElement(
-      "iframe"
-    );
-
-
-  iframe.style.display =
-    "none";
-
-
-  iframe.src =
-    URL_APPS_SCRIPT +
-    "?modo=resultadoEscaneo" +
-    "&code=" +
-    encodeURIComponent(
-      codigo
-    ) +
-    "&token=" +
-    encodeURIComponent(
-      token
-    );
-
-
-  document.body.appendChild(
-    iframe
-  );
-
-
-  window.addEventListener(
-    "message",
-    recibirResultado
-  );
-
-
-  setTimeout(
-    function() {
-
-      mostrarResultado(
-        "⚠️ Error de comunicación<br><br>" +
-        "Apps Script no respondió a tiempo.",
-        "error"
-      );
-
-      botonOtro.style.display =
-        "block";
-
-    },
-    10000
-  );
-
-}
-
-
-/*
-========================================
-RECIBIR RESULTADO
-========================================
-*/
-
-function recibirResultado(
-  event
-) {
-
-  if (
-    event.origin !==
-      "https://script.google.com" &&
-    event.origin !==
-      "https://script.googleusercontent.com"
-  ) {
-
-    return;
-
-  }
-
-
-  const datos =
-    event.data;
-
-
-  if (
-    !datos ||
-    datos.tipo !==
-      "RESULTADO_BOLETO"
-  ) {
-
-    return;
-
-  }
-
-
-  const r =
-    datos.resultado || {};
-
-
-  let html =
-    "";
-
-
-  if (
-    r.resultado ===
-    "VALIDO"
-  ) {
-
-    html =
-      "🟢 <strong>ENTRADA VÁLIDA</strong><br><br>" +
-      "Acceso autorizado<br><br>" +
-      "Folio: " +
-      (r.folio || "Sin folio") +
-      "<br>" +
-      "Nombre: " +
-      (r.nombre || "No registrado");
-
-
-    mostrarResultado(
-      html,
-      "exito"
-    );
-
-
-  } else if (
-    r.resultado ===
-      "USADO"
-  ) {
-
-    html =
-      "🔴 <strong>YA UTILIZADA</strong><br><br>" +
-      "Este boleto ya fue utilizado.";
-
-
-    mostrarResultado(
-      html,
-      "error"
-    );
-
-
-  } else if (
-    r.resultado ===
-      "CANCELADO"
-  ) {
-
-    html =
-      "🚫 <strong>ENTRADA CANCELADA</strong><br><br>" +
-      "Este boleto fue cancelado.";
-
-
-    mostrarResultado(
-      html,
-      "error"
-    );
-
-
-  } else if (
-    r.resultado ===
-      "PENDIENTE" ||
-    r.resultado ===
-      "CERRADA"
-  ) {
-
-    html =
-      "🟡 <strong>ENTRADA AÚN NO ABIERTA</strong><br><br>" +
-      "El acceso todavía no está abierto.";
-
-
-    mostrarResultado(
-      html,
-      "espera"
-    );
-
-
-  } else {
-
-    html =
-      "❌ <strong>NO VÁLIDO</strong><br><br>" +
-      (
-        r.mensaje ||
-        "No se pudo validar el boleto."
-      );
-
-
-    mostrarResultado(
-      html,
-      "error"
-    );
-
-  }
-
-
-  botonOtro.style.display =
-    "block";
-
-}
-
-
-/*
-========================================
-MOSTRAR RESULTADO
-========================================
-*/
-
-function mostrarResultado(
-  html,
-  clase
-) {
-
-  resultadoBox.innerHTML =
-    html;
-
-  resultadoBox.className =
-    "resultado " +
-    clase;
-
-  resultadoBox.style.display =
-    "block";
-
-}
-
-
-/*
-========================================
-DETENER CAMARA
-========================================
-*/
-
-function detenerCamara() {
-
-  escaneando =
-    false;
-
-
-  if (stream) {
-
-    stream
-      .getTracks()
-      .forEach(
-        function(track) {
-
-          track.stop();
-
-        }
-      );
-
-    stream =
-      null;
-
-  }
-
-
-  video.srcObject =
-    null;
-
-}
-
-
-/*
-========================================
-ESCANEAR OTRO
-========================================
-*/
-
-botonOtro.onclick =
-  function() {
-
-    location.reload();
-
-  };
-
-</script>
+    /*
+     * MOSTRAR RESULTADO
+     */
+
+    function mostrarResultado(resultado) {
+
+      if (!resultado) {
+
+        resultadoDiv.innerHTML =
+          "<div class='estado'>" +
+            "❌ No se recibió respuesta." +
+          "</div>";
+
+        return;
+
+      }
+
+
+      if (
+        resultado.autorizado
+      ) {
+
+        resultadoDiv.innerHTML =
+          "<div class='estado'>" +
+            "✅ ENTRADA VÁLIDA" +
+            "<br><br>" +
+            "Acceso autorizado." +
+            "<br><br>" +
+            "<strong>" +
+              "Folio: " +
+              (
+                resultado.folio ||
+                "No registrado"
+              ) +
+            "</strong>" +
+            "<br>" +
+            "Nombre: " +
+            (
+              resultado.nombre ||
+              "No registrado"
+            ) +
+          "</div>";
+
+      } else {
+
+        resultadoDiv.innerHTML =
+          "<div class='estado'>" +
+            "❌ ENTRADA NO VÁLIDA" +
+            "<br><br>" +
+            (
+              resultado.mensaje ||
+              "Boleto no válido."
+            ) +
+          "</div>";
+
+      }
+
+    }
+
+  </script>
 
 </body>
 </html>
