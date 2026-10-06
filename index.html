@@ -533,99 +533,151 @@
      * VALIDAR BOLETO
      */
 
-    function validarBoleto(codigo) {
+   function validarBoleto(codigo) {
 
-      resultadoDiv.innerHTML =
-        "<div class='estado'>" +
-          "⏳ Validando boleto..." +
-        "</div>";
-
-
-      const iframe =
-        document.createElement("iframe");
+  resultadoDiv.innerHTML =
+    "<div class='estado'>" +
+      "⏳ Validando boleto..." +
+    "</div>";
 
 
-      iframe.style.display =
-        "none";
+  const iframe =
+    document.createElement("iframe");
 
 
-      iframe.src =
-        URL_APPS_SCRIPT +
-        "?modo=resultadoEscaneo" +
-        "&code=" +
-        encodeURIComponent(codigo) +
-        "&token=" +
-        encodeURIComponent(token);
+  iframe.style.display =
+    "none";
 
 
-      document.body.appendChild(
-        iframe
-      );
+  iframe.src =
+    URL_APPS_SCRIPT +
+    "?modo=resultadoEscaneo" +
+    "&code=" +
+    encodeURIComponent(codigo) +
+    "&token=" +
+    encodeURIComponent(token);
 
 
-      let recibido = false;
+  document.body.appendChild(
+    iframe
+  );
 
 
-      function recibirResultado(event) {
+  let recibido = false;
 
-  if (
-    !event.data ||
-    event.data.tipo !==
-    "RESULTADO_BOLETO"
-  ) {
 
-    return;
+  function recibirResultado(event) {
+
+    /*
+     * Solo aceptamos mensajes
+     * enviados por nuestro iframe.
+     */
+
+    if (
+      event.source !==
+      iframe.contentWindow
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      !event.data ||
+      event.data.tipo !==
+      "RESULTADO_BOLETO"
+    ) {
+
+      return;
+
+    }
+
+
+    recibido = true;
+
+
+    window.removeEventListener(
+      "message",
+      recibirResultado
+    );
+
+
+    mostrarResultado(
+      event.data.resultado
+    );
+
+
+    /*
+     * Ya no necesitamos el iframe.
+     */
+
+    setTimeout(
+      function() {
+
+        if (
+          iframe &&
+          iframe.parentNode
+        ) {
+
+          iframe.parentNode.removeChild(
+            iframe
+          );
+
+        }
+
+      },
+      1000
+    );
 
   }
 
 
-        recibido = true;
+  window.addEventListener(
+    "message",
+    recibirResultado
+  );
 
 
-        window.removeEventListener(
-          "message",
-          recibirResultado
-        );
+  setTimeout(
+    function() {
 
+      if (recibido) {
 
-        mostrarResultado(
-          event.data.resultado
-        );
+        return;
 
       }
 
 
-      window.addEventListener(
+      window.removeEventListener(
         "message",
         recibirResultado
       );
 
 
-      setTimeout(
-        function() {
+      if (
+        iframe &&
+        iframe.parentNode
+      ) {
 
-          if (recibido) {
-            return;
-          }
+        iframe.parentNode.removeChild(
+          iframe
+        );
 
-
-          window.removeEventListener(
-            "message",
-            recibirResultado
-          );
+      }
 
 
-          resultadoDiv.innerHTML =
-            "<div class='estado'>" +
-              "⚠️ Error de comunicación<br>" +
-              "Apps Script no respondió a tiempo." +
-            "</div>";
+      resultadoDiv.innerHTML =
+        "<div class='estado'>" +
+          "⚠️ Error de comunicación<br>" +
+          "Apps Script no respondió a tiempo." +
+        "</div>";
 
-        },
-        10000
-      );
+    },
+    10000
+  );
 
-    }
+}
 
 
     /*
