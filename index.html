@@ -568,25 +568,15 @@
 
       function recibirResultado(event) {
 
-        if (
-          event.origin !==
-          "https://extasyheirs.github.io"
-        ) {
+  if (
+    !event.data ||
+    event.data.tipo !==
+    "RESULTADO_BOLETO"
+  ) {
 
-          return;
+    return;
 
-        }
-
-
-        if (
-          !event.data ||
-          event.data.tipo !==
-          "RESULTADO_BOLETO"
-        ) {
-
-          return;
-
-        }
+  }
 
 
         recibido = true;
