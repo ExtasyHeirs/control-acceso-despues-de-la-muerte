@@ -50,6 +50,12 @@
       margin-bottom: 22px;
     }
 
+    .sesion {
+      font-size: 14px;
+      color: #8cff9c;
+      margin-bottom: 14px;
+    }
+
     #video {
       width: 100%;
       max-height: 420px;
@@ -85,6 +91,11 @@
       display: none;
     }
 
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
     .estado {
       margin-top: 18px;
       padding: 15px;
@@ -117,12 +128,6 @@
     .error {
       background: #432020;
       color: #ff9c9c;
-    }
-
-    .sesion {
-      font-size: 14px;
-      color: #8cff9c;
-      margin-bottom: 12px;
     }
 
   </style>
@@ -186,7 +191,7 @@
 
     /*
      * ==========================================
-     * TOKEN DE SESIÓN
+     * TOKEN
      * ==========================================
      */
 
@@ -255,9 +260,207 @@
       estado.textContent =
         "Regresa al inicio e ingresa nuevamente.";
 
-      botonCamara.disabled = true;
+      botonCamara.disabled =
+        true;
 
     }
+
+
+    /*
+     * ==========================================
+     * VARIABLES
+     * ==========================================
+     */
+
+    let stream =
+      null;
+
+    let escaneando =
+      false;
+
+    let solicitudEnviada =
+      false;
+
+    let resultadoRecibido =
+      false;
+
+
+    /*
+     * ==========================================
+     * BOTÓN CÁMARA
+     * ==========================================
+     */
+
+    botonCamara.onclick =
+      async function() {
+
+        if (!token) {
+
+          return;
+
+        }
+
+        botonCamara.disabled =
+          true;
+
+        estado.className =
+          "estado";
+
+        estado.textContent =
+          "📷 Activando cámara...";
+
+
+        /*
+         * IMPORTANTE:
+         * LA CÁMARA SE SOLICITA
+         * ANTES DE CARGAR jsQR.
+         */
+
+        try {
+
+          if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+          ) {
+
+            throw new Error(
+              "Este navegador no permite acceder a la cámara desde esta página."
+            );
+
+          }
+
+          stream =
+            await navigator
+              .mediaDevices
+              .getUserMedia({
+
+                video: {
+                  facingMode: {
+                    ideal: "environment"
+                  }
+                },
+
+                audio: false
+
+              });
+
+        } catch (error) {
+
+          console.error(
+            "Error cámara:",
+            error
+          );
+
+          estado.className =
+            "estado error";
+
+          estado.innerHTML =
+            "❌ No se pudo abrir la cámara.<br><br>" +
+            "<b>" +
+            (error.name || "Error") +
+            "</b><br>" +
+            (error.message || "") +
+            "<br><br>" +
+            "Permite el acceso a la cámara para este sitio.";
+
+          botonCamara.disabled =
+            false;
+
+          return;
+
+        }
+
+
+        /*
+         * ======================================
+         * CÁMARA ABIERTA
+         * ======================================
+         */
+
+        video.srcObject =
+          stream;
+
+        video.style.display =
+          "block";
+
+        try {
+
+          await video.play();
+
+        } catch (error) {
+
+          console.error(
+            "Error reproduciendo cámara:",
+            error
+          );
+
+        }
+
+
+        estado.textContent =
+          "📷 Cámara activa. Preparando lector QR...";
+
+
+        /*
+         * ======================================
+         * CARGAR jsQR DESPUÉS DE LA CÁMARA
+         * ======================================
+         */
+
+        try {
+
+          await cargarJsQR();
+
+        } catch (error) {
+
+          detenerCamara();
+
+          estado.className =
+            "estado error";
+
+          estado.textContent =
+            "❌ No se pudo cargar el lector QR.";
+
+          botonCamara.disabled =
+            false;
+
+          return;
+
+        }
+
+
+        /*
+         * ======================================
+         * INICIAR ESCANEO
+         * ======================================
+         */
+
+        solicitudEnviada =
+          false;
+
+        resultadoRecibido =
+          false;
+
+        escaneando =
+          true;
+
+        botonCamara.style.display =
+          "none";
+
+        botonOtro.style.display =
+          "none";
+
+        estado.className =
+          "estado";
+
+        estado.textContent =
+          "📷 Cámara activa. Apunta al código QR.";
+
+        requestAnimationFrame(
+          escanear
+        );
+
+      };
 
 
     /*
@@ -266,17 +469,12 @@
      * ==========================================
      */
 
-    let jsQRListo =
-      false;
-
     function cargarJsQR() {
 
       return new Promise(
         function(resolve, reject) {
 
           if (window.jsQR) {
-
-            jsQRListo = true;
 
             resolve();
 
@@ -295,9 +493,22 @@
           script.onload =
             function() {
 
-              jsQRListo = true;
+              if (
+                typeof window.jsQR ===
+                "function"
+              ) {
 
-              resolve();
+                resolve();
+
+              } else {
+
+                reject(
+                  new Error(
+                    "jsQR no quedó disponible."
+                  )
+                );
+
+              }
 
             };
 
@@ -326,113 +537,7 @@
 
     /*
      * ==========================================
-     * CÁMARA
-     * ==========================================
-     */
-
-    let stream =
-      null;
-
-    let escaneando =
-      false;
-
-    let solicitudEnviada =
-      false;
-
-
-    botonCamara.onclick =
-      async function() {
-
-        if (!token) {
-
-          return;
-
-        }
-
-        botonCamara.disabled =
-          true;
-
-        estado.className =
-          "estado";
-
-        estado.textContent =
-          "📷 Activando cámara...";
-
-        try {
-
-          await cargarJsQR();
-
-          stream =
-            await navigator
-              .mediaDevices
-              .getUserMedia({
-
-                video: {
-                  facingMode: {
-                    ideal: "environment"
-                  }
-                },
-
-                audio: false
-
-              });
-
-          video.srcObject =
-            stream;
-
-          video.style.display =
-            "block";
-
-          await video.play();
-
-          escaneando =
-            true;
-
-          solicitudEnviada =
-            false;
-
-          botonCamara.style.display =
-            "none";
-
-          botonOtro.style.display =
-            "none";
-
-          estado.textContent =
-            "📷 Cámara activa. Apunta al código QR.";
-
-          requestAnimationFrame(
-            escanear
-          );
-
-        } catch (error) {
-
-          console.error(
-            error
-          );
-
-          estado.className =
-            "estado error";
-
-          estado.innerHTML =
-            "❌ No se pudo abrir la cámara.<br><br>" +
-            "<b>" +
-            (error.name || "Error") +
-            "</b><br>" +
-            (error.message || "") +
-            "<br><br>" +
-            "Permite el acceso a la cámara para este sitio.";
-
-          botonCamara.disabled =
-            false;
-
-        }
-
-      };
-
-
-    /*
-     * ==========================================
-     * ESCANEO
+     * ESCANEAR
      * ==========================================
      */
 
@@ -447,7 +552,8 @@
       if (
         video.readyState >= 2 &&
         video.videoWidth > 0 &&
-        video.videoHeight > 0
+        video.videoHeight > 0 &&
+        typeof window.jsQR === "function"
       ) {
 
         canvas.width =
@@ -458,7 +564,10 @@
 
         const contexto =
           canvas.getContext(
-            "2d"
+            "2d",
+            {
+              willReadFrequently: true
+            }
           );
 
         contexto.drawImage(
@@ -512,7 +621,7 @@
 
     /*
      * ==========================================
-     * EXTRAER FOLIO
+     * EXTRAER CÓDIGO
      * ==========================================
      */
 
@@ -525,8 +634,8 @@
           contenido || ""
         ).trim();
 
+
       /*
-       * Caso directo:
        * DM-0001
        */
 
@@ -542,9 +651,9 @@
 
       }
 
+
       /*
-       * Caso URL:
-       * ?code=DM-0001
+       * URL CON ?code=
        */
 
       try {
@@ -585,6 +694,24 @@
 
       }
 
+
+      /*
+       * ÚLTIMO INTENTO:
+       * CUALQUIER DM-XXXX
+       */
+
+      const encontrado =
+        texto.match(
+          /DM-\d{4,}/i
+        );
+
+      if (encontrado) {
+
+        return encontrado[0]
+          .toUpperCase();
+
+      }
+
       return "";
 
     }
@@ -621,9 +748,17 @@
         estado.textContent =
           "❌ El código QR no contiene un folio válido.";
 
+        solicitudEnviada =
+          false;
+
+        requestAnimationFrame(
+          escanear
+        );
+
         return;
 
       }
+
 
       solicitudEnviada =
         true;
@@ -639,6 +774,7 @@
         codigo +
         "...";
 
+
       enviarValidacion(
         codigo
       );
@@ -648,7 +784,7 @@
 
     /*
      * ==========================================
-     * ENVIAR A APPS SCRIPT
+     * ENVIAR VALIDACIÓN
      * ==========================================
      */
 
@@ -668,6 +804,7 @@
           token
         );
 
+
       const iframe =
         document.createElement(
           "iframe"
@@ -685,21 +822,20 @@
           iframe
         );
 
+
       setTimeout(
         function() {
 
           if (
-            !window.__resultadoRecibido
+            !resultadoRecibido
           ) {
 
             estado.className =
               "estado error";
 
             estado.innerHTML =
-              "⚠️ Apps Script no respondió a tiempo.<br><br>" +
-              "Código enviado: <b>" +
-              codigo +
-              "</b>";
+              "⚠️ Error de comunicación<br><br>" +
+              "Apps Script no respondió a tiempo.";
 
             botonOtro.style.display =
               "block";
@@ -749,7 +885,7 @@
 
         }
 
-        window.__resultadoRecibido =
+        resultadoRecibido =
           true;
 
         mostrarResultado(
@@ -803,7 +939,7 @@
 
 
       /*
-       * VALIDACIÓN CORRECTA
+       * VÁLIDO
        */
 
       if (
@@ -830,7 +966,7 @@
 
 
       /*
-       * YA UTILIZADO
+       * USADO
        */
 
       if (
@@ -878,14 +1014,12 @@
 
 
       /*
-       * ENTRADA CERRADA
+       * CERRADO / PENDIENTE
        */
 
       if (
-        tipo ===
-          "CERRADA" ||
-        tipo ===
-          "PENDIENTE"
+        tipo === "CERRADA" ||
+        tipo === "PENDIENTE"
       ) {
 
         estado.className =
@@ -901,7 +1035,7 @@
 
 
       /*
-       * ERROR / OTRO
+       * ERROR
        */
 
       estado.className =
@@ -964,7 +1098,7 @@
     botonOtro.onclick =
       function() {
 
-        window.__resultadoRecibido =
+        resultadoRecibido =
           false;
 
         solicitudEnviada =
