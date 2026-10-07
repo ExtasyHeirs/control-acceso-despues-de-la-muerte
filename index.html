@@ -216,6 +216,37 @@
 
 
     /*
+     * CANVAS REUTILIZABLE
+     *
+     * En lugar de crear un canvas nuevo
+     * en cada frame, usamos uno solo.
+     */
+
+    const canvas =
+      document.createElement("canvas");
+
+    const contexto =
+      canvas.getContext("2d", {
+        willReadFrequently: true
+      });
+
+
+    /*
+     * CONFIGURACIÓN DEL ESCANEO
+     *
+     * jsQR no necesita procesar toda la
+     * resolución de la cámara.
+     *
+     * Tomamos la zona central y la
+     * reducimos para acelerar el análisis.
+     */
+
+    const TAMANO_MAXIMO_ESCANEO = 640;
+
+    const PORCION_CENTRAL = 0.80;
+
+
+    /*
      * VALIDAR SESIÓN
      */
 
@@ -411,37 +442,121 @@
         video.videoHeight > 0
       ) {
 
-        const canvas =
-          document.createElement("canvas");
+        /*
+         * DIMENSIONES DE LA CÁMARA
+         */
 
-        const contexto =
-          canvas.getContext("2d");
-
-
-        canvas.width =
+        const anchoVideo =
           video.videoWidth;
 
-        canvas.height =
+        const altoVideo =
           video.videoHeight;
 
 
+        /*
+         * TOMAR SOLO LA ZONA CENTRAL
+         */
+
+        const anchoRecorte =
+          Math.floor(
+            anchoVideo *
+            PORCION_CENTRAL
+          );
+
+        const altoRecorte =
+          Math.floor(
+            altoVideo *
+            PORCION_CENTRAL
+          );
+
+
+        const inicioX =
+          Math.floor(
+            (anchoVideo - anchoRecorte) / 2
+          );
+
+        const inicioY =
+          Math.floor(
+            (altoVideo - altoRecorte) / 2
+          );
+
+
+        /*
+         * REDUCIR LA IMAGEN
+         *
+         * Esto evita mandarle a jsQR
+         * toda la resolución del celular.
+         */
+
+        let anchoDestino =
+          anchoRecorte;
+
+        let altoDestino =
+          altoRecorte;
+
+
+        if (
+          anchoDestino >
+          TAMANO_MAXIMO_ESCANEO
+        ) {
+
+          const escala =
+            TAMANO_MAXIMO_ESCANEO /
+            anchoDestino;
+
+          anchoDestino =
+            Math.floor(
+              anchoDestino * escala
+            );
+
+          altoDestino =
+            Math.floor(
+              altoDestino * escala
+            );
+
+        }
+
+
+        canvas.width =
+          anchoDestino;
+
+        canvas.height =
+          altoDestino;
+
+
+        /*
+         * DIBUJAR SOLO EL RECORTE
+         */
+
         contexto.drawImage(
           video,
+          inicioX,
+          inicioY,
+          anchoRecorte,
+          altoRecorte,
           0,
           0,
-          canvas.width,
-          canvas.height
+          anchoDestino,
+          altoDestino
         );
 
+
+        /*
+         * OBTENER PIXELES
+         */
 
         const imagen =
           contexto.getImageData(
             0,
             0,
-            canvas.width,
-            canvas.height
+            anchoDestino,
+            altoDestino
           );
 
+
+        /*
+         * BUSCAR QR
+         */
 
         const codigoQR =
           jsQR(
@@ -750,155 +865,155 @@
 
     function mostrarResultado(resultado) {
 
-  validando = false;
+      validando = false;
 
 
-  if (!resultado) {
+      if (!resultado) {
 
-    resultadoDiv.innerHTML =
-      "<div class='estado error'>" +
-        "❌ No se recibió respuesta." +
-      "</div>" +
+        resultadoDiv.innerHTML =
+          "<div class='estado error'>" +
+            "❌ No se recibió respuesta." +
+          "</div>" +
 
-      "<button " +
-        "type='button' " +
-        "onclick='escanearOtroBoleto()'>" +
-        "🔄 Escanear otro boleto" +
-      "</button>";
+          "<button " +
+            "type='button' " +
+            "onclick='escanearOtroBoleto()'>" +
+            "🔄 Escanear otro boleto" +
+          "</button>";
 
-    return;
+        return;
 
-  }
+      }
 
 
-  /*
-   * ENTRADA VÁLIDA
-   */
+      /*
+       * ENTRADA VÁLIDA
+       */
 
-  if (
-    resultado.resultado === "VALIDO"
-  ) {
+      if (
+        resultado.resultado === "VALIDO"
+      ) {
 
-    resultadoDiv.innerHTML =
-      "<div class='estado exito'>" +
+        resultadoDiv.innerHTML =
+          "<div class='estado exito'>" +
 
-        "✅ ENTRADA VÁLIDA" +
+            "✅ ENTRADA VÁLIDA" +
 
-        "<br><br>" +
+            "<br><br>" +
 
-        "Acceso autorizado." +
+            "Acceso autorizado." +
 
-        "<br><br>" +
+            "<br><br>" +
 
-        "<strong>" +
-          "Folio: " +
+            "<strong>" +
+              "Folio: " +
+              (
+                resultado.folio ||
+                "No registrado"
+              ) +
+            "</strong>" +
+
+            "<br>" +
+
+            "Nombre: " +
+            (
+              resultado.nombre ||
+              "No registrado"
+            ) +
+
+          "</div>" +
+
+          "<button " +
+            "type='button' " +
+            "onclick='escanearOtroBoleto()'>" +
+
+            "🔄 Escanear otro boleto" +
+
+          "</button>";
+
+        return;
+
+      }
+
+
+      /*
+       * BOLETO YA UTILIZADO
+       */
+
+      if (
+        resultado.resultado === "USADO"
+      ) {
+
+        resultadoDiv.innerHTML =
+          "<div class='estado error'>" +
+
+            "❌ ENTRADA NO VÁLIDA" +
+
+            "<br><br>" +
+
+            "<strong>" +
+              "Esta entrada ya fue utilizada." +
+            "</strong>" +
+
+            "<br><br>" +
+
+            "Folio: " +
+            (
+              resultado.folio ||
+              "No registrado"
+            ) +
+
+            "<br>" +
+
+            "Nombre: " +
+            (
+              resultado.nombre ||
+              "No registrado"
+            ) +
+
+          "</div>" +
+
+          "<button " +
+            "type='button' " +
+            "onclick='escanearOtroBoleto()'>" +
+
+            "🔄 Escanear otro boleto" +
+
+          "</button>";
+
+        return;
+
+      }
+
+
+      /*
+       * CUALQUIER OTRO RESULTADO
+       * SE CONSIDERA NO VÁLIDO.
+       */
+
+      resultadoDiv.innerHTML =
+        "<div class='estado error'>" +
+
+          "❌ ENTRADA NO VÁLIDA" +
+
+          "<br><br>" +
+
           (
-            resultado.folio ||
-            "No registrado"
+            resultado.mensaje ||
+            "Boleto no válido."
           ) +
-        "</strong>" +
 
-        "<br>" +
+        "</div>" +
 
-        "Nombre: " +
-        (
-          resultado.nombre ||
-          "No registrado"
-        ) +
+        "<button " +
+          "type='button' " +
+          "onclick='escanearOtroBoleto()'>" +
 
-      "</div>" +
+          "🔄 Escanear otro boleto" +
 
-      "<button " +
-        "type='button' " +
-        "onclick='escanearOtroBoleto()'>" +
+        "</button>";
 
-        "🔄 Escanear otro boleto" +
-
-      "</button>";
-
-    return;
-
-  }
-
-
-  /*
-   * BOLETO YA UTILIZADO
-   */
-
-  if (
-    resultado.resultado === "USADO"
-  ) {
-
-    resultadoDiv.innerHTML =
-      "<div class='estado error'>" +
-
-        "❌ ENTRADA NO VÁLIDA" +
-
-        "<br><br>" +
-
-        "<strong>" +
-          "Esta entrada ya fue utilizada." +
-        "</strong>" +
-
-        "<br><br>" +
-
-        "Folio: " +
-        (
-          resultado.folio ||
-          "No registrado"
-        ) +
-
-        "<br>" +
-
-        "Nombre: " +
-        (
-          resultado.nombre ||
-          "No registrado"
-        ) +
-
-      "</div>" +
-
-      "<button " +
-        "type='button' " +
-        "onclick='escanearOtroBoleto()'>" +
-
-        "🔄 Escanear otro boleto" +
-
-      "</button>";
-
-    return;
-
-  }
-
-
-  /*
-   * CUALQUIER OTRO RESULTADO
-   * SE CONSIDERA NO VÁLIDO.
-   */
-
-  resultadoDiv.innerHTML =
-    "<div class='estado error'>" +
-
-      "❌ ENTRADA NO VÁLIDA" +
-
-      "<br><br>" +
-
-      (
-        resultado.mensaje ||
-        "Boleto no válido."
-      ) +
-
-    "</div>" +
-
-    "<button " +
-      "type='button' " +
-      "onclick='escanearOtroBoleto()'>" +
-
-      "🔄 Escanear otro boleto" +
-
-    "</button>";
-
-}
+    }
 
 
     /*
