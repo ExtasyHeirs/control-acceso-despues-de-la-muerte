@@ -750,113 +750,155 @@
 
     function mostrarResultado(resultado) {
 
-      validando = false;
+  validando = false;
 
 
-      if (!resultado) {
+  if (!resultado) {
 
-        resultadoDiv.innerHTML =
-          "<div class='estado error'>" +
-            "❌ No se recibió respuesta." +
-          "</div>" +
+    resultadoDiv.innerHTML =
+      "<div class='estado error'>" +
+        "❌ No se recibió respuesta." +
+      "</div>" +
 
-          "<button " +
-            "type='button' " +
-            "onclick='escanearOtroBoleto()'>" +
-            "🔄 Escanear otro boleto" +
-          "</button>";
+      "<button " +
+        "type='button' " +
+        "onclick='escanearOtroBoleto()'>" +
+        "🔄 Escanear otro boleto" +
+      "</button>";
 
-        return;
+    return;
 
-      }
-
-
-      /*
-       * IMPORTANTE:
-       *
-       * autorizarEntrada() devuelve:
-       *
-       * resultado: "VALIDO"
-       *
-       * No devuelve:
-       *
-       * autorizado: true
-       */
-
-      if (
-        resultado.resultado === "VALIDO"
-      ) {
-
-        resultadoDiv.innerHTML =
-          "<div class='estado exito'>" +
-
-            "✅ ENTRADA VÁLIDA" +
-
-            "<br><br>" +
-
-            "Acceso autorizado." +
-
-            "<br><br>" +
-
-            "<strong>" +
-              "Folio: " +
-              (
-                resultado.folio ||
-                "No registrado"
-              ) +
-            "</strong>" +
-
-            "<br>" +
-
-            "Nombre: " +
-            (
-              resultado.nombre ||
-              "No registrado"
-            ) +
-
-          "</div>" +
-
-          "<button " +
-            "type='button' " +
-            "onclick='escanearOtroBoleto()'>" +
-
-            "🔄 Escanear otro boleto" +
-
-          "</button>";
-
-        return;
-
-      }
+  }
 
 
-      /*
-       * CUALQUIER OTRO RESULTADO
-       * SE CONSIDERA NO VÁLIDO.
-       */
+  /*
+   * ENTRADA VÁLIDA
+   */
 
-      resultadoDiv.innerHTML =
-        "<div class='estado error'>" +
+  if (
+    resultado.resultado === "VALIDO"
+  ) {
 
-          "❌ ENTRADA NO VÁLIDA" +
+    resultadoDiv.innerHTML =
+      "<div class='estado exito'>" +
 
-          "<br><br>" +
+        "✅ ENTRADA VÁLIDA" +
 
+        "<br><br>" +
+
+        "Acceso autorizado." +
+
+        "<br><br>" +
+
+        "<strong>" +
+          "Folio: " +
           (
-            resultado.mensaje ||
-            "Boleto no válido."
+            resultado.folio ||
+            "No registrado"
           ) +
+        "</strong>" +
 
-        "</div>" +
+        "<br>" +
 
-        "<button " +
-          "type='button' " +
-          "onclick='escanearOtroBoleto()'>" +
+        "Nombre: " +
+        (
+          resultado.nombre ||
+          "No registrado"
+        ) +
 
-          "🔄 Escanear otro boleto" +
+      "</div>" +
 
-        "</button>";
+      "<button " +
+        "type='button' " +
+        "onclick='escanearOtroBoleto()'>" +
 
-    }
+        "🔄 Escanear otro boleto" +
+
+      "</button>";
+
+    return;
+
+  }
+
+
+  /*
+   * BOLETO YA UTILIZADO
+   */
+
+  if (
+    resultado.resultado === "USADO"
+  ) {
+
+    resultadoDiv.innerHTML =
+      "<div class='estado error'>" +
+
+        "❌ ENTRADA NO VÁLIDA" +
+
+        "<br><br>" +
+
+        "<strong>" +
+          "Esta entrada ya fue utilizada." +
+        "</strong>" +
+
+        "<br><br>" +
+
+        "Folio: " +
+        (
+          resultado.folio ||
+          "No registrado"
+        ) +
+
+        "<br>" +
+
+        "Nombre: " +
+        (
+          resultado.nombre ||
+          "No registrado"
+        ) +
+
+      "</div>" +
+
+      "<button " +
+        "type='button' " +
+        "onclick='escanearOtroBoleto()'>" +
+
+        "🔄 Escanear otro boleto" +
+
+      "</button>";
+
+    return;
+
+  }
+
+
+  /*
+   * CUALQUIER OTRO RESULTADO
+   * SE CONSIDERA NO VÁLIDO.
+   */
+
+  resultadoDiv.innerHTML =
+    "<div class='estado error'>" +
+
+      "❌ ENTRADA NO VÁLIDA" +
+
+      "<br><br>" +
+
+      (
+        resultado.mensaje ||
+        "Boleto no válido."
+      ) +
+
+    "</div>" +
+
+    "<button " +
+      "type='button' " +
+      "onclick='escanearOtroBoleto()'>" +
+
+      "🔄 Escanear otro boleto" +
+
+    "</button>";
+
+}
 
 
     /*
